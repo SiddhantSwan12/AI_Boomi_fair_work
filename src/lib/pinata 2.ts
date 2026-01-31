@@ -3,14 +3,11 @@
  * Uses Pinata's v3 API with JWT authentication
  */
 
+const PINATA_JWT = process.env.PINATA_JWT!;
 const PINATA_GATEWAY = "https://gateway.pinata.cloud/ipfs/";
 
-function getPinataJWT(): string {
-    const jwt = process.env.PINATA_JWT;
-    if (!jwt) {
-        throw new Error("Missing PINATA_JWT environment variable");
-    }
-    return jwt;
+if (!PINATA_JWT) {
+    throw new Error("Missing PINATA_JWT environment variable");
 }
 
 /**
@@ -33,7 +30,7 @@ export async function uploadFileToPinata(file: File): Promise<string> {
     const response = await fetch("https://api.pinata.cloud/pinning/pinFileToIPFS", {
         method: "POST",
         headers: {
-            Authorization: `Bearer ${getPinataJWT()}`,
+            Authorization: `Bearer ${PINATA_JWT}`,
         },
         body: formData,
     });
@@ -55,7 +52,7 @@ export async function uploadJSONToPinata(jsonData: any, name: string): Promise<s
         method: "POST",
         headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${getPinataJWT()}`,
+            Authorization: `Bearer ${PINATA_JWT}`,
         },
         body: JSON.stringify({
             pinataContent: jsonData,

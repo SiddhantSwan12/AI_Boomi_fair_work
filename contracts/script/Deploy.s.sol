@@ -11,8 +11,8 @@ import "../src/FairWorkEscrow.sol";
  */
 contract DeployScript is Script {
     // Polygon Amoy USDC address (testnet)
-    // Note: Using Mumbai USDC for now - update if Amoy has a different test USDC
-    address constant AMOY_USDC = 0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582;
+    // User's actual USDC token on Polygon Amoy
+    address constant AMOY_USDC = 0x8B0180f2101c8260d49339abfEe87927412494B4;
     
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");

@@ -1,16 +1,14 @@
-"use client";
-
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { WagmiProvider } from "wagmi";
-import { RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
-import "@rainbow-me/rainbowkit/styles.css";
-import { config } from "@/lib/wagmi";
+import dynamic from "next/dynamic";
 import "./globals.css";
 import { Inter } from "next/font/google";
 
 const inter = Inter({ subsets: ["latin"] });
 
-const queryClient = new QueryClient();
+// Import Providers with SSR disabled to prevent hydration errors
+const Providers = dynamic(
+    () => import("@/components/Providers").then((mod) => ({ default: mod.Providers })),
+    { ssr: false }
+);
 
 export default function RootLayout({
     children,
@@ -20,19 +18,7 @@ export default function RootLayout({
     return (
         <html lang="en" className="dark">
             <body className={inter.className}>
-                <WagmiProvider config={config}>
-                    <QueryClientProvider client={queryClient}>
-                        <RainbowKitProvider
-                            theme={darkTheme({
-                                accentColor: "#6366f1", // Indigo-500
-                                accentColorForeground: "white",
-                                borderRadius: "medium",
-                            })}
-                        >
-                            {children}
-                        </RainbowKitProvider>
-                    </QueryClientProvider>
-                </WagmiProvider>
+                <Providers>{children}</Providers>
             </body>
         </html>
     );

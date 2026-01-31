@@ -2,13 +2,17 @@
 
 import { useState, useEffect } from "react";
 import Navbar from "@/components/layout/Navbar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
-import { formatAddress, formatRelativeTime } from "@/lib/utils";
-import { Loader2, Scale, AlertTriangle } from "lucide-react";
+import { formatAddress } from "@/lib/utils";
+import { Loader2, Scale, AlertCircle, ArrowUpRight, Brain, Users, Clock, CheckCircle } from "lucide-react";
 import Link from "next/link";
+
+const statusConfig: Record<string, { bg: string; text: string; label: string; icon: any }> = {
+    OPEN: { bg: "bg-yellow-100", text: "text-yellow-700", label: "Pending Analysis", icon: Clock },
+    AI_ANALYZED: { bg: "bg-blue-100", text: "text-blue-700", label: "AI Analyzed", icon: Brain },
+    VOTING: { bg: "bg-purple-100", text: "text-purple-700", label: "DAO Voting", icon: Users },
+    RESOLVED: { bg: "bg-green-100", text: "text-green-700", label: "Resolved", icon: CheckCircle },
+};
 
 export default function DisputesPage() {
     const [disputes, setDisputes] = useState<any[]>([]);
@@ -24,13 +28,14 @@ export default function DisputesPage() {
         const { data, error } = await supabase
             .from("disputes")
             .select(`
-        *,
-        jobs (
-          title,
-          client,
-          freelancer
-        )
-      `)
+                *,
+                jobs (
+                    title,
+                    client,
+                    freelancer,
+                    amount
+                )
+            `)
             .order("created_at", { ascending: false });
 
         if (error) {
@@ -43,86 +48,134 @@ export default function DisputesPage() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+        <div className="min-h-screen bg-gray-50">
             <Navbar />
 
-            <div className="container mx-auto px-6 py-12">
-                {/* Header */}
-                <div className="mb-8">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 bg-amber-600 rounded-lg flex items-center justify-center">
+            {/* Header Section */}
+            <div className="bg-white border-b border-gray-100">
+                <div className="container-custom py-12">
+                    <div className="flex items-center gap-4 mb-3">
+                        <div className="w-12 h-12 bg-gradient-to-br from-[#1DBF73] to-[#00b894] rounded-xl flex items-center justify-center shadow-lg shadow-green-500/20">
                             <Scale className="w-6 h-6 text-white" />
                         </div>
-                        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
-                            Active Disputes
+                        <h1 className="text-4xl font-bold text-gray-900">
+                            Dispute Center
                         </h1>
                     </div>
-                    <p className="text-slate-600 dark:text-slate-400">
-                        AI-analyzed disputes awaiting DAO jury resolution
-                    </p>
+                    <div className="flex items-center justify-between gap-4">
+                        <p className="text-gray-600 text-lg">
+                            Fair resolution powered by AI analysis and community governance
+                        </p>
+                        <Link href="/test-ai">
+                            <button className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all flex items-center gap-2 whitespace-nowrap">
+                                <Brain className="w-5 h-5" />
+                                Try AI Demo
+                            </button>
+                        </Link>
+                    </div>
+                </div>
+            </div>
+
+            <div className="container-custom py-8">
+                {/* How Disputes Work */}
+                <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-8 shadow-sm">
+                    <h3 className="font-bold text-gray-900 mb-4">How Dispute Resolution Works</h3>
+                    <div className="grid md:grid-cols-3 gap-6">
+                        <div className="flex gap-4">
+                            <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <Brain className="w-5 h-5 text-blue-600" />
+                            </div>
+                            <div>
+                                <div className="font-semibold text-gray-900 text-sm mb-1">1. AI Analysis</div>
+                                <p className="text-gray-600 text-sm">OpenAI analyzes the job and provides an unbiased recommendation</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-4">
+                            <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <Users className="w-5 h-5 text-purple-600" />
+                            </div>
+                            <div>
+                                <div className="font-semibold text-gray-900 text-sm mb-1">2. DAO Voting</div>
+                                <p className="text-gray-600 text-sm">3 community jurors vote on the final decision</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-4">
+                            <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <CheckCircle className="w-5 h-5 text-green-600" />
+                            </div>
+                            <div>
+                                <div className="font-semibold text-gray-900 text-sm mb-1">3. Resolution</div>
+                                <p className="text-gray-600 text-sm">Funds are released based on the jury's decision</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Disputes List */}
                 {isLoading ? (
-                    <div className="flex items-center justify-center py-20">
-                        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+                    <div className="flex flex-col items-center justify-center py-24">
+                        <div className="w-12 h-12 border-4 border-gray-200 border-t-[#1DBF73] rounded-full animate-spin mb-4" />
+                        <p className="text-gray-500 font-medium">Loading disputes...</p>
                     </div>
                 ) : disputes.length === 0 ? (
-                    <Card className="text-center py-12">
-                        <CardContent>
-                            <AlertTriangle className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                            <p className="text-slate-600 dark:text-slate-400 mb-2">
-                                No active disputes
-                            </p>
-                            <p className="text-sm text-slate-500 dark:text-slate-500">
-                                All jobs are proceeding smoothly!
-                            </p>
-                        </CardContent>
-                    </Card>
+                    <div className="text-center py-24 bg-white rounded-2xl border border-gray-100">
+                        <div className="w-20 h-20 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                            <CheckCircle className="w-10 h-10 text-green-500" />
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">
+                            No Active Disputes
+                        </h3>
+                        <p className="text-gray-600 max-w-md mx-auto">
+                            Great news! All jobs are proceeding smoothly without any conflicts.
+                        </p>
+                    </div>
                 ) : (
                     <div className="space-y-4">
-                        {disputes.map((dispute) => (
-                            <Link key={dispute.id} href={`/disputes/${dispute.id}`}>
-                                <Card className="hover:shadow-lg hover:shadow-amber-500/10 hover:border-amber-300 dark:hover:border-amber-700 transition-all duration-300 cursor-pointer">
-                                    <CardHeader>
-                                        <div className="flex items-start justify-between">
+                        {disputes.map((dispute, index) => {
+                            const status = statusConfig[dispute.status] || statusConfig.OPEN;
+                            const StatusIcon = status.icon;
+
+                            return (
+                                <Link
+                                    key={dispute.id}
+                                    href={`/disputes/${dispute.id}`}
+                                    className="block"
+                                >
+                                    <div
+                                        className="bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-lg hover:border-[#1DBF73]/30 transition-all duration-300 group animate-fade-in-up"
+                                        style={{ animationDelay: `${index * 0.1}s` }}
+                                    >
+                                        <div className="flex items-start justify-between gap-4">
                                             <div className="flex-1">
-                                                <CardTitle className="text-lg mb-2">
-                                                    {dispute.jobs?.title || "Untitled Job"}
-                                                </CardTitle>
-                                                <div className="flex items-center gap-4 text-sm text-slate-600 dark:text-slate-400">
-                                                    <span>Client: {formatAddress(dispute.jobs?.client || "")}</span>
-                                                    <span>•</span>
-                                                    <span>Freelancer: {formatAddress(dispute.jobs?.freelancer || "")}</span>
+                                                <div className="flex items-center gap-3 mb-3">
+                                                    <h3 className="text-lg font-bold text-gray-900 group-hover:text-[#1DBF73] transition-colors">
+                                                        {dispute.jobs?.title || "Untitled Job"}
+                                                    </h3>
+                                                    <span className={`inline-flex items-center gap-1.5 ${status.bg} ${status.text} px-3 py-1 rounded-full text-xs font-semibold`}>
+                                                        <StatusIcon className="w-3 h-3" />
+                                                        {status.label}
+                                                    </span>
                                                 </div>
-                                            </div>
-                                            <Badge variant={
-                                                dispute.status === "RESOLVED" ? "success" :
-                                                    dispute.status === "VOTING" ? "warning" :
-                                                        "danger"
-                                            }>
-                                                {dispute.status}
-                                            </Badge>
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">
-                                                    Raised by: {formatAddress(dispute.raised_by)}
-                                                </p>
-                                                <p className="text-sm text-slate-700 dark:text-slate-300 line-clamp-2">
-                                                    {dispute.reason}
+
+                                                <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-500 mb-4">
+                                                    <span>Client: <span className="text-gray-700 font-medium">{formatAddress(dispute.jobs?.client || "")}</span></span>
+                                                    <span>Freelancer: <span className="text-gray-700 font-medium">{formatAddress(dispute.jobs?.freelancer || "")}</span></span>
+                                                </div>
+
+                                                <p className="text-gray-600 text-sm line-clamp-2">
+                                                    <span className="text-gray-400">Reason:</span> {dispute.reason}
                                                 </p>
                                             </div>
-                                            <Button variant="outline" size="sm">
-                                                View Details
-                                            </Button>
+
+                                            {/* Arrow */}
+                                            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-[#1DBF73] transition-colors flex-shrink-0">
+                                                <ArrowUpRight className="w-5 h-5 text-gray-500 group-hover:text-white transition-colors" />
+                                            </div>
                                         </div>
-                                    </CardContent>
-                                </Card>
-                            </Link>
-                        ))}
+                                    </div>
+                                </Link>
+                            );
+                        })}
                     </div>
                 )}
             </div>

@@ -4,13 +4,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Client, type DecodedMessage, type Dm, type Identifier, type Signer, type XmtpEnv } from "@xmtp/browser-sdk";
 import { hexToBytes } from "viem";
 import { useWalletClient } from "wagmi";
-import { Loader2, Send, MessageSquare, Users, Search, Paperclip, Smile, ShieldCheck } from "lucide-react";
+import { Loader2, Send, MessageSquare, Users, Search, Paperclip, Smile, ShieldCheck, Mic, Trash2, Bold, Italic, Strikethrough, Link, List, ListOrdered, Code, Type, AtSign, Plus, LayoutList, ChevronDown, Hash } from "lucide-react";
 
 type ChatMessage = {
     id: string;
     text: string;
     sentAt: number;
     isMine: boolean;
+    isAudio?: boolean;
+    audioUrl?: string;
 };
 
 type JobXmtpChatProps = {
@@ -70,6 +72,12 @@ export default function JobXmtpChat({
     const [error, setError] = useState<string | null>(null);
     const [statusHint, setStatusHint] = useState<string | null>(null);
 
+    const [isRecording, setIsRecording] = useState(false);
+    const [recordingDuration, setRecordingDuration] = useState(0);
+    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+    const audioChunksRef = useRef<Blob[]>([]);
+    const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
     const normalizedCurrent = currentUserAddress ? normalizeAddress(currentUserAddress) : "";
     const normalizedClient = normalizeAddress(clientAddress);
     const normalizedFreelancer = normalizeAddress(freelancerAddress);
@@ -93,12 +101,25 @@ export default function JobXmtpChat({
         const history = await activeDm.messages({ limit: 50n });
 
         const parsed = (history as DecodedMessage[])
-            .map((message) => ({
-                id: String(message?.id || `${message?.sentAtNs || Date.now()}`),
-                text: extractMessageText(message),
-                sentAt: toMillis(message?.sentAtNs),
-                isMine: message?.senderInboxId === activeClient.inboxId,
-            }))
+            .map((message) => {
+                const text = extractMessageText(message);
+                let isAudio = false;
+                let audioUrl = undefined;
+
+                if (text.startsWith("[VOICE]:")) {
+                    isAudio = true;
+                    audioUrl = text.substring(8);
+                }
+
+                return {
+                    id: String(message?.id || `${message?.sentAtNs || Date.now()}`),
+                    text: isAudio ? "Voice message" : text,
+                    sentAt: toMillis(message?.sentAtNs),
+                    isMine: message?.senderInboxId === activeClient.inboxId,
+                    isAudio,
+                    audioUrl
+                };
+            })
             .sort((a: ChatMessage, b: ChatMessage) => a.sentAt - b.sentAt);
 
         setMessages(parsed);
@@ -202,6 +223,10 @@ export default function JobXmtpChat({
                 xmtpClientRef.current.close();
                 xmtpClientRef.current = null;
             }
+            if (recordingIntervalRef.current) clearInterval(recordingIntervalRef.current);
+            if (mediaRecorderRef.current?.stream) {
+                mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+            }
         };
     }, [initializeChat]);
 
@@ -244,6 +269,94 @@ export default function JobXmtpChat({
         }
     };
 
+    const startRecording = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const mediaRecorder = new MediaRecorder(stream);
+            mediaRecorderRef.current = mediaRecorder;
+            audioChunksRef.current = [];
+
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    audioChunksRef.current.push(event.data);
+                }
+            };
+
+            mediaRecorder.onstop = async () => {
+                const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+
+                const reader = new FileReader();
+                reader.readAsDataURL(audioBlob);
+                reader.onloadend = async () => {
+                    const base64AudioMessage = `[VOICE]:${reader.result}`;
+
+                    if (base64AudioMessage.length > 1000000) {
+                        setError("Voice message too large (limit ~1MB). Please record a shorter message.");
+                        return;
+                    }
+
+                    if (dm && xmtpClient) {
+                        try {
+                            setIsSending(true);
+                            await dm.send(base64AudioMessage);
+                            await refreshMessages(dm, xmtpClient);
+                        } catch (sendError) {
+                            setError(sendError instanceof Error ? sendError.message : "Failed to send voice message.");
+                        } finally {
+                            setIsSending(false);
+                        }
+                    }
+                };
+
+                stream.getTracks().forEach(track => track.stop());
+            };
+
+            mediaRecorder.start();
+            setIsRecording(true);
+            setRecordingDuration(0);
+
+            recordingIntervalRef.current = setInterval(() => {
+                setRecordingDuration((prev) => prev + 1);
+            }, 1000);
+
+        } catch (err) {
+            console.error("Error accessing microphone:", err);
+            setError("Microphone access denied or unavailable.");
+        }
+    };
+
+    const stopRecording = () => {
+        if (mediaRecorderRef.current && isRecording) {
+            mediaRecorderRef.current.stop();
+            setIsRecording(false);
+            if (recordingIntervalRef.current) {
+                clearInterval(recordingIntervalRef.current);
+            }
+        }
+    };
+
+    const cancelRecording = () => {
+        if (mediaRecorderRef.current && isRecording) {
+            mediaRecorderRef.current.onstop = () => {
+                if (mediaRecorderRef.current?.stream) {
+                    mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+                }
+            };
+            mediaRecorderRef.current.stop();
+            setIsRecording(false);
+            if (recordingIntervalRef.current) {
+                clearInterval(recordingIntervalRef.current);
+            }
+            setRecordingDuration(0);
+        }
+    };
+
+    const formatDuration = (seconds: number) => {
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        return `${m}:${s.toString().padStart(2, '0')}`;
+    };
+
     const formatTime = (value: number) =>
         new Date(value).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
@@ -270,148 +383,235 @@ export default function JobXmtpChat({
     }
 
     return (
-        <div className="rounded-2xl border border-[#1a1a24] overflow-hidden bg-[#0b0b10]">
-            <div className="grid md:grid-cols-[270px_1fr] min-h-[520px]">
-                <aside className="border-r border-[#1a1a24] bg-[#09090d]">
-                    <div className="p-4 border-b border-[#1a1a24]">
-                        <h3 className="text-sm font-semibold text-[#f0f0f5] tracking-wide">FairWork Chat</h3>
-                        <p className="text-xs text-[#86869a] mt-1">Slack-style workspace</p>
+        <div className="h-[80vh] min-h-[600px] flex border border-[#2a2f3d] rounded-xl overflow-hidden shadow-xl font-sans">
+            <aside className="border-r border-[#2a2f3d] bg-[#1a1d21] flex flex-col h-full text-[#b5bac1] w-[260px] shrink-0">
+                {/* Header */}
+                <div className="px-4 py-3.5 border-b border-[#2a2f3d] flex items-center justify-between hover:bg-[#202428] cursor-pointer transition-colors shadow-sm shrink-0">
+                    <h3 className="font-bold text-[#f2f3f5] truncate">FairWork Workspace</h3>
+                    <ChevronDown className="w-4 h-4 text-[#8a8e94]" />
+                </div>
+
+                {/* Channels & DMs */}
+                <div className="flex-1 overflow-y-auto py-3 space-y-6 scroller-hidden">
+                    {/* Job Info */}
+                    <div className="px-3">
+                        <h4 className="px-1 text-[11px] font-semibold text-[#8a8e94] uppercase tracking-wider mb-1">Job Details</h4>
+                        <div className="px-2 py-1.5 rounded-md bg-[#202428] text-[#f2f3f5] border border-[#2a2f3d]">
+                            <p className="text-[13px] font-medium truncate">{jobTitle || "Untitled Job"}</p>
+                            {jobAmount && <p className="text-[11px] text-[#23a559] mt-0.5">{jobAmount} USDC</p>}
+                        </div>
                     </div>
 
-                    <div className="p-3">
-                        <div className="rounded-xl border border-[#2c2c38] bg-[#12121a] px-3 py-2 mb-3">
-                            <div className="text-[11px] uppercase tracking-wide text-[#8888a0]">Job</div>
-                            <p className="text-sm text-[#f0f0f5] mt-1 line-clamp-2">{jobTitle || "Untitled Job"}</p>
-                            {jobAmount && <p className="text-xs text-[#a4f3c2] mt-1">{jobAmount} USDC</p>}
+                    {/* Channels */}
+                    <div className="px-3">
+                        <div className="flex items-center justify-between px-1 mb-1 group cursor-pointer">
+                            <h4 className="text-[11px] font-semibold text-[#8a8e94] group-hover:text-[#f2f3f5] uppercase tracking-wider transition-colors">Channels</h4>
+                            <Plus className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
+                        <div className="space-y-0.5">
+                            <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-[#353740] text-[#f2f3f5] cursor-pointer">
+                                <Hash className="w-4 h-4 opacity-70" />
+                                <span className="text-[14px] font-medium truncate">general</span>
+                            </div>
+                            <div className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-[#202428] cursor-pointer transition-colors">
+                                <Hash className="w-4 h-4 opacity-70" />
+                                <span className="text-[14px] font-medium truncate">job-discussion</span>
+                            </div>
+                        </div>
+                    </div>
 
-                        <div className="rounded-xl border border-[#313145] bg-[#1a1a28] px-3 py-2">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2 text-sm text-[#d5d5e3]">
-                                    <MessageSquare className="w-4 h-4 text-indigo-300" />
-                                    <span className="font-medium"># {jobTitle ? "job-room" : "chat-room"}</span>
+                    {/* Direct Messages */}
+                    <div className="px-3">
+                        <div className="flex items-center justify-between px-1 mb-1 group cursor-pointer">
+                            <h4 className="text-[11px] font-semibold text-[#8a8e94] group-hover:text-[#f2f3f5] uppercase tracking-wider transition-colors">Direct messages</h4>
+                            <Plus className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                        <div className="space-y-0.5">
+                            <div className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-[#202428] cursor-pointer transition-colors text-[#f2f3f5]">
+                                <div className="relative flex items-center justify-center w-5 h-5 rounded bg-[#3a5f52] text-[10px] font-bold text-white overflow-hidden shrink-0">
+                                    {clientAddress.slice(2, 4).toUpperCase()}
+                                    <div className="absolute bottom-[-1px] right-[-1px] w-2 h-2 rounded-full border border-[#1a1d21] bg-[#23a559]" />
                                 </div>
-                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300">LIVE</span>
+                                <span className="text-[14px] truncate">Client ({shortAddress(clientAddress)})</span>
                             </div>
-                            <p className="text-xs text-[#9b9bb3] mt-2">Direct collaboration channel</p>
-                        </div>
-
-                        <div className="mt-4 rounded-xl border border-[#2c2c38] bg-[#111118] p-3">
-                            <div className="flex items-center gap-2 text-xs text-[#8e8ea5] mb-2">
-                                <Users className="w-3.5 h-3.5" />
-                                Participants
-                            </div>
-                            <div className="space-y-2 text-xs">
-                                <p className="text-[#f0f0f5]">Client: <span className="text-[#9d9db3]">{shortAddress(clientAddress)}</span></p>
-                                <p className="text-[#f0f0f5]">Freelancer: <span className="text-[#9d9db3]">{shortAddress(freelancerAddress)}</span></p>
+                            <div className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-[#202428] cursor-pointer transition-colors">
+                                <div className="relative flex items-center justify-center w-5 h-5 rounded bg-[#2a2f3d] text-[10px] font-bold text-white overflow-hidden shrink-0">
+                                    {freelancerAddress.slice(2, 4).toUpperCase()}
+                                    <div className="absolute bottom-[-1px] right-[-1px] w-2 h-2 rounded-full border border-[#1a1d21] bg-[#23a559]" />
+                                </div>
+                                <span className="text-[14px] truncate">Freelancer ({shortAddress(freelancerAddress)})</span>
                             </div>
                         </div>
                     </div>
-                </aside>
+                </div>
+            </aside>
 
-                <section className="flex flex-col bg-[#0e0f13]">
-                    <div className="px-4 py-3 border-b border-[#1a1a24] bg-[#11131a] flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-300 font-semibold">
-                                {counterPartyAddress.slice(2, 4).toUpperCase()}
-                            </div>
-                            <div>
-                                <p className="text-sm font-semibold text-[#f0f0f5]">{shortAddress(counterPartyAddress)}</p>
-                                <p className="text-xs text-[#8f90a6]">online on XMTP ({XMTP_ENV})</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-2 text-[#8f90a6]">
-                            <button className="p-2 rounded-lg hover:bg-[#1b1d26]"><Search className="w-4 h-4" /></button>
-                            <div className="px-2.5 py-1 rounded-full border border-[#2f3240] text-[11px]">
-                                {isRefreshing ? "Syncing..." : "Synced"}
-                            </div>
-                        </div>
+            <section className="flex-1 flex flex-col bg-[#11131a] min-w-0 h-full relative">
+                <div className="px-4 py-2 border-b border-[#2a2f3d] bg-[#1a1d21] flex items-center justify-between shadow-sm shrink-0">
+                    <div className="flex items-center gap-2 group cursor-pointer hover:bg-[#202428] px-2 py-1 -ml-2 rounded-md transition-colors">
+                        <span className="font-bold text-[15px] text-[#f2f3f5]"># general</span>
+                        <ChevronDown className="w-3.5 h-3.5 text-[#8a8e94] opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
-
-                    <div className="flex-1 overflow-y-auto p-4 bg-[radial-gradient(circle_at_20%_10%,rgba(255,255,255,0.04)_0,transparent_38%),radial-gradient(circle_at_80%_70%,rgba(99,102,241,0.12)_0,transparent_42%),#0e0f13]">
-                        {isInitializing ? (
-                            <div className="h-full flex items-center justify-center text-sm text-[#8888a0] gap-2">
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                                Initializing XMTP chat...
+                    <div className="flex items-center gap-3 text-[#8a8e94]">
+                        <div className="relative group/search hidden sm:block">
+                            <div className="absolute flex items-center justify-center w-7 h-full left-0 pl-1">
+                                <Search className="w-3.5 h-3.5 text-[#5c5f73]" />
                             </div>
-                        ) : error ? (
-                            <div className="space-y-3">
-                                <div className="text-sm text-red-400">{error}</div>
-                                <button
-                                    onClick={() => void initializeChat()}
-                                    className="px-3 py-2 rounded-lg border border-[#2a2a35] text-xs text-[#cfcfe0] hover:bg-[#151520]"
-                                >
-                                    Retry XMTP Connection
-                                </button>
-                            </div>
-                        ) : messages.length === 0 ? (
-                            <div className="h-full flex items-center justify-center text-sm text-[#8888a0]">
-                                No messages yet. Start the conversation.
-                            </div>
-                        ) : (
-                            <div className="space-y-2.5">
-                                {messages.map((message) => (
-                                    <div key={message.id} className={`flex ${message.isMine ? "justify-end" : "justify-start"}`}>
-                                        <div
-                                            className={`max-w-[78%] rounded-2xl px-3.5 py-2 text-sm shadow-sm ${message.isMine
-                                                    ? "bg-[#3a5f52] text-[#e8fff3] rounded-br-md"
-                                                    : "bg-[#1a1f2b] text-[#eef1ff] rounded-bl-md"
-                                                }`}
-                                        >
-                                            <p className="leading-relaxed break-words">{message.text}</p>
-                                            <p className={`mt-1 text-[11px] text-right ${message.isMine ? "text-[#c7f3de]" : "text-[#9ea6c7]"}`}>
-                                                {formatTime(message.sentAt)}
-                                            </p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="border-t border-[#1a1a24] bg-[#11131a] px-3 py-3">
-                        <div className="flex items-center gap-2">
-                            <button className="p-2 rounded-lg text-[#9093a8] hover:bg-[#1b1d26]">
-                                <Smile className="w-4 h-4" />
-                            </button>
-                            <button className="p-2 rounded-lg text-[#9093a8] hover:bg-[#1b1d26]">
-                                <Paperclip className="w-4 h-4" />
-                            </button>
                             <input
                                 type="text"
-                                value={draft}
-                                onChange={(event) => setDraft(event.target.value)}
-                                onKeyDown={(event) => {
-                                    if (event.key === "Enter") {
-                                        event.preventDefault();
-                                        handleSend();
-                                    }
-                                }}
-                                placeholder="Type a message"
-                                className="flex-1 bg-[#171a24] border border-[#2a2f3d] rounded-full px-4 py-2.5 text-sm text-[#f0f0f5] placeholder:text-[#8888a0] focus:outline-none focus:border-[#6f86ff]"
-                                disabled={isInitializing || !!error || isSending}
+                                placeholder="Search"
+                                className="w-[180px] h-7 bg-[#0b0c0f] border border-[#2a2f3d] rounded pl-7 pr-2 text-xs text-[#f2f3f5] focus:outline-none focus:border-[#4b4e60] focus:ring-1 focus:ring-[#4b4e60] transition-all"
                             />
+                        </div>
+                        <div className="px-2 py-1 rounded text-[11px] font-medium border border-[#2a2f3d] bg-[#0b0c0f] flex items-center gap-1.5 whitespace-nowrap">
+                            <div className={`w-1.5 h-1.5 rounded-full ${isRefreshing ? 'bg-amber-400 animate-pulse' : 'bg-[#23a559]'}`} />
+                            <span className="hidden sm:inline">XMTP</span> {XMTP_ENV.toUpperCase()}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-4 scroller-thin min-h-0">
+                    {isInitializing ? (
+                        <div className="h-full flex items-center justify-center text-sm text-[#8888a0] gap-2">
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Initializing XMTP chat...
+                        </div>
+                    ) : error ? (
+                        <div className="space-y-3">
+                            <div className="text-sm text-red-400">{error}</div>
                             <button
-                                onClick={handleSend}
-                                disabled={!draft.trim() || isInitializing || !!error || isSending}
-                                className="w-10 h-10 rounded-full bg-[#25d366] text-[#0a2415] flex items-center justify-center hover:bg-[#2de06f] disabled:opacity-50 disabled:cursor-not-allowed"
+                                onClick={() => void initializeChat()}
+                                className="px-3 py-2 rounded-lg border border-[#2a2a35] text-xs text-[#cfcfe0] hover:bg-[#151520]"
                             >
-                                {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                                Retry XMTP Connection
                             </button>
                         </div>
-                        <div className="mt-2 flex items-center justify-between">
-                            <p className="text-[11px] text-[#777790]">
-                                Messages are end-to-end encrypted over XMTP.
-                            </p>
-                            <div className="inline-flex items-center gap-1 text-[11px] text-[#85d7ac]">
-                                <ShieldCheck className="w-3 h-3" />
-                                Secure
+                    ) : messages.length === 0 ? (
+                        <div className="h-full flex items-center justify-center text-sm text-[#8888a0]">
+                            No messages yet. Start the conversation.
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            {messages.map((message) => (
+                                <div key={message.id} className="flex gap-3 items-start group hover:bg-[#1a1c26] p-1.5 -mx-1.5 rounded-lg transition-colors">
+                                    <div
+                                        className="w-10 h-10 shrink-0 mt-0.5 rounded flex items-center justify-center font-bold text-[#eef1ff] shadow-sm"
+                                        style={{ backgroundColor: message.isMine ? '#3a5f52' : '#2a2f3d' }}
+                                    >
+                                        {message.isMine ? normalizedCurrent.slice(2, 4).toUpperCase() : counterPartyAddress.slice(2, 4).toUpperCase()}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-baseline gap-2">
+                                            <span className="font-bold text-[15px] text-[#f2f3f5]">
+                                                {message.isMine ? "You" : shortAddress(counterPartyAddress)}
+                                            </span>
+                                            <span className="text-[11px] text-[#8a8e94]">
+                                                {formatTime(message.sentAt)}
+                                            </span>
+                                        </div>
+                                        <div className="text-[#dcdde1] text-[15px] leading-relaxed break-words mt-0.5">
+                                            {message.isAudio ? (
+                                                <div className="flex flex-col gap-1 mt-1">
+                                                    <audio controls src={message.audioUrl} className="max-w-[400px] w-full h-10 rounded outline-none" style={{ filter: "invert(1) hue-rotate(180deg) brightness(1.2)" }} />
+                                                </div>
+                                            ) : (
+                                                <p>{message.text}</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                <div className="px-4 pb-4 pt-1 bg-[#11131a] w-full shrink-0">
+                    <div className="border border-[#2a2f3d] rounded-xl bg-[#1a1d21] flex flex-col focus-within:border-[#4b4e60] transition-all shadow-sm">
+
+                        <div className="flex items-center gap-1 border-b border-[#2a2f3d] px-2 py-1.5 text-[#9093a8] overflow-x-auto scroller-hidden">
+                            <button className="p-1.5 rounded hover:bg-[#2a2f3d] transition-colors"><Bold className="w-3.5 h-3.5" /></button>
+                            <button className="p-1.5 rounded hover:bg-[#2a2f3d] transition-colors"><Italic className="w-3.5 h-3.5" /></button>
+                            <button className="p-1.5 rounded hover:bg-[#2a2f3d] transition-colors"><Strikethrough className="w-3.5 h-3.5" /></button>
+                            <div className="w-px h-4 bg-[#2a2f3d] mx-1 shrink-0" />
+                            <button className="p-1.5 rounded hover:bg-[#2a2f3d] transition-colors"><Link className="w-3.5 h-3.5" /></button>
+                            <div className="w-px h-4 bg-[#2a2f3d] mx-1 shrink-0" />
+                            <button className="p-1.5 rounded hover:bg-[#2a2f3d] transition-colors"><List className="w-3.5 h-3.5" /></button>
+                            <button className="p-1.5 rounded hover:bg-[#2a2f3d] transition-colors"><ListOrdered className="w-3.5 h-3.5" /></button>
+                            <button className="p-1.5 rounded hover:bg-[#2a2f3d] transition-colors"><LayoutList className="w-3.5 h-3.5" /></button>
+                            <div className="w-px h-4 bg-[#2a2f3d] mx-1 shrink-0" />
+                            <button className="p-1.5 rounded hover:bg-[#2a2f3d] transition-colors"><Code className="w-3.5 h-3.5" /></button>
+                        </div>
+
+                        <div className="min-h-[56px] flex items-center w-full px-3 py-2">
+                            {isRecording ? (
+                                <div className="flex items-center w-full gap-3 bg-[#11131a] rounded-lg px-3 py-2 border border-red-500/20">
+                                    <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shrink-0" />
+                                    <span className="text-sm text-red-500 font-medium font-mono w-10">{formatDuration(recordingDuration)}</span>
+                                    <div className="flex-1 text-xs text-[#8f90a6] pl-2 hidden sm:block">Recording voice message...</div>
+                                    <div className="flex-1 sm:hidden" />
+                                    <button onClick={cancelRecording} className="p-1.5 text-[#9093a8] hover:text-white rounded-md hover:bg-red-500/20 transition-colors">
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            ) : (
+                                <input
+                                    type="text"
+                                    value={draft}
+                                    onChange={(event) => setDraft(event.target.value)}
+                                    onKeyDown={(event) => {
+                                        if (event.key === "Enter" && !isSending && !isInitializing && !error && draft.trim()) {
+                                            event.preventDefault();
+                                            handleSend();
+                                        }
+                                    }}
+                                    placeholder={`Message ${shortAddress(counterPartyAddress)}`}
+                                    className="w-full bg-transparent border-none px-1 text-[15px] text-[#f0f0f5] placeholder:text-[#6a6c80] focus:outline-none focus:ring-0"
+                                    disabled={isInitializing || !!error || isSending}
+                                />
+                            )}
+                        </div>
+
+                        <div className="flex items-center justify-between px-2 py-1.5">
+                            <div className="flex items-center gap-1 text-[#9093a8]">
+                                <button className="p-1.5 rounded-full hover:bg-[#2a2f3d] shrink-0 transition-colors"><Plus className="w-4 h-4" /></button>
+                                <button className="p-1.5 rounded-full hover:bg-[#2a2f3d] shrink-0 hidden sm:block transition-colors"><Type className="w-4 h-4" /></button>
+                                <button className="p-1.5 rounded-full hover:bg-[#2a2f3d] shrink-0 transition-colors"><Smile className="w-4 h-4" /></button>
+                                <button className="p-1.5 rounded-full hover:bg-[#2a2f3d] shrink-0 transition-colors"><AtSign className="w-4 h-4" /></button>
+                                {!draft.trim() && !isRecording && (
+                                    <>
+                                        <button className="p-1.5 rounded-full hover:bg-[#2a2f3d] shrink-0 transition-colors"><Paperclip className="w-4 h-4" /></button>
+                                        <button onClick={startRecording} className="p-1.5 rounded-full hover:bg-[#2a2f3d] shrink-0 transition-colors"><Mic className="w-4 h-4" /></button>
+                                    </>
+                                )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <div className="hidden sm:flex items-center gap-1 text-[11px] font-medium text-[#5c5f73] mr-2">
+                                    <ShieldCheck className="w-3 h-3" />
+                                    E2E Encrypted
+                                </div>
+                                {isRecording ? (
+                                    <button onClick={stopRecording} className="w-8 h-8 rounded shrink-0 bg-[#25d366] text-[#0a2415] flex items-center justify-center hover:bg-[#2de06f] transition-colors">
+                                        <Send className="w-3.5 h-3.5 ml-0.5" />
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={handleSend}
+                                        disabled={!draft.trim() || isInitializing || !!error || isSending}
+                                        className={`w-8 h-8 rounded shrink-0 flex items-center justify-center transition-colors ${draft.trim() && !isInitializing && !error && !isSending
+                                            ? "bg-[#25d366] text-[#0a2415] hover:bg-[#2de06f]"
+                                            : "bg-[#2a2f3d] text-[#5c5f73] cursor-not-allowed"
+                                            }`}
+                                    >
+                                        {isSending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5 ml-0.5" />}
+                                    </button>
+                                )}
                             </div>
                         </div>
-                        {statusHint && <p className="text-xs text-amber-400 mt-2">{statusHint}</p>}
                     </div>
-                </section>
-            </div>
+                    {statusHint && <p className="text-xs text-amber-400 mt-2 ml-1">{statusHint}</p>}
+                    {error && <p className="text-xs text-red-400 mt-2 ml-1">{error}</p>}
+                </div>
+            </section>
         </div>
     );
 }

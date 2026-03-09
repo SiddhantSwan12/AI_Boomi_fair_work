@@ -109,7 +109,7 @@ export default function HeroSection() {
                     {/* RIGHT — Hero abstract image */}
                     <FadeInOnScroll direction="right" delay={0.2}>
                         <HeroImage3D
-                            src="/assets/hero/Stylized 3D Bitcoin Symbol.png"
+                            src="/assets/hero/stylized-3d-bitcoin-symbol.png"
                             alt="Professional 3D floating illustration for FairWork"
                         />
                     </FadeInOnScroll>

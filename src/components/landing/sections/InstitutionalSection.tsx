@@ -8,19 +8,19 @@ import CinematicImage from "../CinematicImage";
 
 const cards = [
     {
-        image: "/assets/hero/Global Connectivity Art.png",
+        image: "/assets/hero/global-connectivity-art.png",
         title: "Creative professionals worldwide",
         description:
             "Connect with verified designers, developers, and strategists. Every freelancer goes through on-chain verification before accessing the platform.",
     },
     {
-        image: "/assets/hero/Futuristic Molecular Art.png",
+        image: "/assets/hero/futuristic-molecular-art.png",
         title: "Enterprise-grade infrastructure",
         description:
             "Built on Polygon with sub-second finality, FairWork processes escrow transactions at scale with near-zero gas costs.",
     },
     {
-        image: "/assets/hero/Stylized Bitcoin Symbol.png",
+        image: "/assets/hero/stylized-bitcoin-symbol.png",
         title: "Teams that trust the protocol",
         description:
             "From solo freelancers to distributed agencies, FairWork removes counterparty risk and enables trustless collaboration at global scale.",

@@ -94,6 +94,20 @@ export const ESCROW_ABI = [
         type: "function",
     },
     {
+        inputs: [{ name: "_juror", type: "address" }],
+        name: "addJuror",
+        outputs: [],
+        stateMutability: "nonpayable",
+        type: "function",
+    },
+    {
+        inputs: [{ name: "", type: "address" }],
+        name: "isJuror",
+        outputs: [{ name: "", type: "bool" }],
+        stateMutability: "view",
+        type: "function",
+    },
+    {
         inputs: [{ name: "_jobId", type: "uint256" }],
         name: "cancelJob",
         outputs: [],
@@ -206,6 +220,66 @@ export const ESCROW_ABI = [
         type: "event",
     },
 ] as const;
+
+// Verify.sol — deployed on Polygon Amoy at NEXT_PUBLIC_VERIFY_ADDRESS
+// Used for juror credential anchoring and Merkle proof verification
+export const VERIFY_ABI = [
+    {
+        inputs: [
+            { name: "root",     type: "bytes32" },
+            { name: "docOwner", type: "address" },
+            { name: "deadline", type: "uint256" },
+            { name: "v",        type: "uint8"   },
+            { name: "r",        type: "bytes32" },
+            { name: "s",        type: "bytes32" },
+        ],
+        name: "anchorWithSig",
+        outputs: [],
+        stateMutability: "nonpayable",
+        type: "function",
+    },
+    {
+        inputs: [
+            { name: "rootHash", type: "bytes32"   },
+            { name: "leaf",     type: "bytes32"   },
+            { name: "proof",    type: "bytes32[]" },
+            { name: "isLeft",   type: "bool[]"    },
+        ],
+        name: "verify",
+        outputs: [{ name: "ok", type: "bool" }],
+        stateMutability: "pure",
+        type: "function",
+    },
+    {
+        inputs: [{ name: "", type: "bytes32" }],
+        name: "docs",
+        outputs: [
+            { name: "owner",     type: "address" },
+            { name: "timestamp", type: "uint256" },
+        ],
+        stateMutability: "view",
+        type: "function",
+    },
+    {
+        inputs: [{ name: "", type: "address" }],
+        name: "nonces",
+        outputs: [{ name: "", type: "uint256" }],
+        stateMutability: "view",
+        type: "function",
+    },
+    {
+        anonymous: false,
+        inputs: [
+            { indexed: false, name: "document", type: "bytes"   },
+            { indexed: false, name: "owner",    type: "address" },
+        ],
+        name: "DocumentAccepted",
+        type: "event",
+    },
+] as const;
+
+export const VERIFY_ADDRESS  = (process.env.NEXT_PUBLIC_VERIFY_ADDRESS        ?? "") as `0x${string}`;
+export const ESCROW_ADDRESS  = (process.env.NEXT_PUBLIC_ESCROW_CONTRACT_ADDRESS ?? "") as `0x${string}`;
 
 // ERC20 USDC ABI (minimal - just what we need)
 export const USDC_ABI = [

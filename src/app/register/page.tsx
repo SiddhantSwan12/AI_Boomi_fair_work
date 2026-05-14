@@ -107,14 +107,14 @@ export default function RegisterPage() {
 
     if (checking) {
         return (
-            <div className="min-h-screen bg-backdrop flex items-center justify-center">
+            <div className="min-h-screen bg-surface flex items-center justify-center">
                 <div className="w-10 h-10 rounded-full border-2 border-accent-indigo border-t-transparent animate-spin" />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-backdrop">
+        <div className="min-h-screen bg-surface">
             <Navbar />
 
             {/* Glow background */}

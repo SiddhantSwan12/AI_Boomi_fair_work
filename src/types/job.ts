@@ -1,11 +1,5 @@
-export enum JobStatus {
-    OPEN = "OPEN",
-    ACCEPTED = "ACCEPTED",
-    SUBMITTED = "SUBMITTED",
-    APPROVED = "APPROVED",
-    DISPUTED = "DISPUTED",
-    RESOLVED = "RESOLVED",
-}
+export { JOB_STATUS } from "@/lib/status";
+export type { JobStatus } from "@/lib/status";
 
 export interface Job {
     id: string;
@@ -17,7 +11,7 @@ export interface Job {
     deadline: number; // Unix timestamp
     client: string; // Wallet address
     freelancer?: string; // Wallet address
-    status: JobStatus;
+    status: import("@/lib/status").JobStatus;
     createdAt: number;
     updatedAt: number;
 }

@@ -1,9 +1,5 @@
-export enum DisputeStatus {
-    RAISED = "RAISED",
-    AI_ANALYZED = "AI_ANALYZED",
-    VOTING = "VOTING",
-    RESOLVED = "RESOLVED",
-}
+export { DISPUTE_STATUS } from "@/lib/status";
+export type { DisputeStatus } from "@/lib/status";
 
 export enum DisputeOutcome {
     PENDING = "PENDING",
@@ -30,7 +26,7 @@ export interface Dispute {
     aiAnalysis?: AIAnalysis;
     jurors: string[]; // 3 wallet addresses
     votes: Vote[];
-    status: DisputeStatus;
+    status: import("@/lib/status").DisputeStatus;
     outcome: DisputeOutcome;
     createdAt: number;
     resolvedAt?: number;

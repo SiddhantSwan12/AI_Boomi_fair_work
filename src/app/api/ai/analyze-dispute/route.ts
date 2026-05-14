@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { rateLimit, getIp } from "@/lib/rate-limit";
 
 // Nugen environment variables
 const NUGEN_API_KEY = process.env.NUGEN_API_KEY;
@@ -30,6 +31,14 @@ Required JSON Structure:
 DO NOT include backticks (\`\`\`) in your response. Just the raw JSON object. Never mention that the dispute is officially 'resolved'. You are simply providing a formal advisory perspective and legal recommendation.`;
 
 export async function POST(request: NextRequest) {
+    const { allowed, retryAfter } = rateLimit(getIp(request), { max: 10 });
+    if (!allowed) {
+        return NextResponse.json(
+            { error: "Too many requests. Please slow down." },
+            { status: 429, headers: { "Retry-After": String(retryAfter) } }
+        );
+    }
+
     try {
         const { disputeId } = await request.json();
         if (!disputeId) {
@@ -80,7 +89,7 @@ export async function POST(request: NextRequest) {
         const submission = submissions?.[0] || null;
 
         // 4. Construct the prompt
-        let userPrompt = `
+        const userPrompt = `
 ### PROJECT DETAILS
 - Project Title: ${job.title}
 - Client Wallet: ${job.client}
@@ -168,7 +177,7 @@ Based strictly on the original contract requirements and what the freelancer sub
         let parsedResult;
         try {
             parsedResult = JSON.parse(aiResultString);
-        } catch (e) {
+        } catch {
             console.error("Failed to parse AI output as JSON:", aiResultString);
             throw new Error("AI returned invalid JSON format.");
         }
@@ -204,6 +213,7 @@ async function callChatCompletion(
     userPrompt: string,
     jsonMode: boolean = false
 ): Promise<string> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const payload: any = {
         model,
         messages: [

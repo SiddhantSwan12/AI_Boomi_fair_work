@@ -120,14 +120,14 @@ export default function CategoryIconsSection() {
     }, { scope: containerRef });
 
     return (
-        <section ref={containerRef} className="py-20 md:py-32 border-b border-white/5 relative z-10 backdrop-blur-[2px]">
+        <section ref={containerRef} className="py-20 md:py-32 border-b border-black/10 relative z-10 backdrop-blur-[2px]" style={{ backgroundColor: "#fafaf8" }}>
             <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
 
                 <div className="cat-header flex items-end justify-between mb-12">
                     <div>
                         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#1DBF73] mb-4">Domains</p>
                         <h2
-                            className="font-bold text-white tracking-tighter"
+                            className="font-bold text-[#0a0a0b] tracking-tighter"
                             style={{ fontSize: "clamp(2rem, 4vw, 3.5rem)", lineHeight: 1.1 }}
                         >
                             Explore Web3<br/>Service Categories
@@ -136,14 +136,14 @@ export default function CategoryIconsSection() {
                     <div className="hidden sm:flex items-center gap-3">
                         <button
                             onClick={() => scroll("left")}
-                            className="w-14 h-14 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 flex items-center justify-center text-white transition-all duration-300 backdrop-blur-xl"
+                            className="w-14 h-14 rounded-full border border-black/10 bg-black/5 hover:bg-black/8 flex items-center justify-center text-[#0a0a0b] transition-all duration-300 backdrop-blur-xl"
                             aria-label="Scroll left"
                         >
                             <ChevronLeft className="w-6 h-6" />
                         </button>
                         <button
                             onClick={() => scroll("right")}
-                            className="w-14 h-14 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 flex items-center justify-center text-white transition-all duration-300 backdrop-blur-xl"
+                            className="w-14 h-14 rounded-full border border-black/10 bg-black/5 hover:bg-black/8 flex items-center justify-center text-[#0a0a0b] transition-all duration-300 backdrop-blur-xl"
                             aria-label="Scroll right"
                         >
                             <ChevronRight className="w-6 h-6" />
@@ -168,10 +168,10 @@ export default function CategoryIconsSection() {
                                 style={{ width: 280, height: 360 }}
                             >
                                 <div
-                                    className="relative overflow-hidden rounded-[2.5rem] w-full h-full cursor-pointer transition-all duration-500 group-hover:-translate-y-3 border border-white/5"
+                                    className="relative overflow-hidden rounded-[2.5rem] w-full h-full cursor-pointer transition-all duration-500 group-hover:-translate-y-3 border border-black/8"
                                     style={{
                                         background: cat.bg,
-                                        boxShadow: "0 12px 40px rgba(0,0,0,0.6)",
+                                        boxShadow: "0 12px 40px rgba(0,0,0,0.12)",
                                     }}
                                 >
                                     {/* Abstract image */}

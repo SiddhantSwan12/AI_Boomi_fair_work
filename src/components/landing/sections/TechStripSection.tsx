@@ -32,9 +32,9 @@ const TECH_LOGOS = [
 
 export default function TechStripSection() {
   return (
-    <div className="relative mt-16 py-14 border-y border-white/5 overflow-hidden">
+    <div className="relative mt-16 py-14 border-y border-black/10 overflow-hidden" style={{ backgroundColor: "#fafaf8" }}>
       {/* faint label */}
-      <p className="text-center text-[10px] uppercase tracking-[0.3em] text-white/20 mb-8 font-semibold">
+      <p className="text-center text-[10px] uppercase tracking-[0.3em] text-[#0a0a0b]/20 mb-8 font-semibold">
         Powered by
       </p>
 
@@ -47,9 +47,9 @@ export default function TechStripSection() {
         hoverSpeed={0}
         scaleOnHover
         fadeOut
-        fadeOutColor="#000000"
+        fadeOutColor="#fafaf8"
         ariaLabel="Technologies powering FairWork"
-        className="text-white/40"
+        className="text-[#0a0a0b]/40"
       />
     </div>
   );

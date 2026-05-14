@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
 import { supabase } from "@/lib/supabase";
+import { DISPUTE_STATUS, getDisputeStatusLabel, normalizeDisputeStatus } from "@/lib/status";
 import { formatUSDC, formatAddress, getIPFSUrl } from "@/lib/utils";
 import {
     Loader2, ExternalLink, Brain, Scale, ShieldCheck,
@@ -139,7 +140,7 @@ export default function DisputeDetailsPage() {
                 }).select().single();
                 if (error) throw error;
                 setAiAnalysis(data);
-                await supabase.from("disputes").update({ status: "AI_ANALYZED" }).eq("id", dispute.id);
+                await supabase.from("disputes").update({ status: DISPUTE_STATUS.AI_ANALYZED }).eq("id", dispute.id);
                 fetchDisputeData();
             }
         } catch (error) {
@@ -223,6 +224,8 @@ export default function DisputeDetailsPage() {
         );
     }
 
+    const normalizedDisputeStatus = normalizeDisputeStatus(dispute.status);
+
     const timelineEvents = [
         {
             title: "Dispute Raised",
@@ -250,11 +253,11 @@ export default function DisputeDetailsPage() {
         },
         {
             title: "Final Resolution",
-            description: dispute.status === "RESOLVED"
+            description: normalizedDisputeStatus === DISPUTE_STATUS.RESOLVED
                 ? `Consensus reached. Winner: ${dispute.outcome === "CLIENT_WINS" ? "Client" : "Freelancer"}`
                 : "Awaiting jury consensus",
             timestamp: dispute.resolved_at ? new Date(dispute.resolved_at).toLocaleString() : "Pending",
-            status: dispute.status === "RESOLVED" ? "completed" as const : "pending" as const,
+            status: normalizedDisputeStatus === DISPUTE_STATUS.RESOLVED ? "completed" as const : "pending" as const,
         },
     ];
 
@@ -286,8 +289,8 @@ export default function DisputeDetailsPage() {
                                         <p className="text-sm text-text-muted">Job: {job.title}</p>
                                     </div>
                                 </div>
-                                <Badge variant={dispute.status === "RESOLVED" ? "success" : "danger"} className="px-3 py-1">
-                                    {dispute.status}
+                                <Badge variant={normalizedDisputeStatus === DISPUTE_STATUS.RESOLVED ? "success" : "danger"} className="px-3 py-1">
+                                    {getDisputeStatusLabel(dispute.status)}
                                 </Badge>
                             </div>
 

@@ -242,10 +242,9 @@ export default function CreateJobPage() {
     const platformFee = budget * 0.025;
     const totalLocked = budget + platformFee;
     const tag = deriveTag(formData.title, formData.description);
-    const isFormComplete = !!(formData.title && formData.description && formData.amount && formData.deadline);
 
     const inputBase = [
-        "w-full pl-11 pr-4 py-3.5 bg-[#f6f8f7] border border-[#e2ede8] rounded-xl",
+        "w-full pl-11 pr-4 py-3.5 bg-white border border-[#DFE7E2] rounded-lg",
         "text-[#0f1a14] placeholder:text-[#8a9e94] text-sm",
         "focus:outline-none focus:border-[#1DBF73] focus:bg-white focus:shadow-[0_0_0_3px_rgba(29,191,115,0.10)]",
         "transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed",
@@ -254,7 +253,7 @@ export default function CreateJobPage() {
     const labelClass = "block text-[11px] font-bold text-[#0f1a14] uppercase tracking-[0.08em] mb-2";
 
     return (
-        <div className="min-h-screen bg-[#f6f8f7]">
+        <div className="fw-product-shell fw-unified-page">
             {/* Font imports */}
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
@@ -263,7 +262,7 @@ export default function CreateJobPage() {
             <Navbar />
 
             {/* Top accent bar */}
-            <div className="h-px" style={{ background: "linear-gradient(90deg, transparent, #1DBF73 30%, rgba(99,102,241,0.4) 70%, transparent)" }} />
+            <div className="h-px bg-[#DFE7E2]" />
 
             <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 lg:py-14">
 
@@ -351,7 +350,7 @@ export default function CreateJobPage() {
                                     value={formData.description}
                                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                     required disabled={isLoading} rows={5}
-                                    className="w-full px-4 py-3.5 bg-[#f6f8f7] border border-[#e2ede8] rounded-xl text-[#0f1a14] placeholder:text-[#8a9e94] text-sm focus:outline-none focus:border-[#1DBF73] focus:bg-white focus:shadow-[0_0_0_3px_rgba(29,191,115,0.10)] transition-all duration-150 resize-none disabled:opacity-50"
+                                    className="w-full px-4 py-3.5 bg-white border border-[#DFE7E2] rounded-lg text-[#0f1a14] placeholder:text-[#8a9e94] text-sm focus:outline-none focus:border-[#1DBF73] focus:bg-white focus:shadow-[0_0_0_3px_rgba(29,191,115,0.10)] transition-all duration-150 resize-none disabled:opacity-50"
                                 />
                             </div>
 
@@ -533,7 +532,7 @@ export default function CreateJobPage() {
                             disabled={isLoading || !isConnected}
                             whileHover={!isLoading && isConnected ? { scale: 1.02, boxShadow: "0 8px 28px rgba(29,191,115,0.40)" } : {}}
                             whileTap={!isLoading && isConnected ? { scale: 0.98 } : {}}
-                            className="w-full py-4 rounded-full text-white font-bold text-[14px] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+                            className="w-full py-4 rounded-lg text-white font-bold text-[14px] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
                             style={{
                                 fontFamily: "'Space Grotesk', sans-serif",
                                 letterSpacing: "-0.01em",

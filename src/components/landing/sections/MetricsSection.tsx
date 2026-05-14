@@ -101,15 +101,15 @@ export default function MetricsSection() {
     }, { scope: sectionRef });
 
     return (
-        <section ref={sectionRef} className="py-8 border-b border-white/5 relative z-10 backdrop-blur-[2px]">
+        <section ref={sectionRef} className="py-8 border-b border-black/10 relative z-10 backdrop-blur-[2px]" style={{ backgroundColor: "#fafaf8" }}>
             <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
 
                 {/* Stats grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-white/5">
-                    {STATS.map((stat, i) => (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-black/10">
+                    {STATS.map((stat) => (
                         <div
                             key={stat.label}
-                            className="stat-card group relative flex flex-col py-12 px-8 overflow-hidden transition-colors duration-500 hover:bg-white/5"
+                            className="stat-card group relative flex flex-col py-12 px-8 overflow-hidden transition-colors duration-500 hover:bg-black/5"
                         >
                             {/* Subtle corner glow on hover */}
                             <div
@@ -126,13 +126,13 @@ export default function MetricsSection() {
                             </div>
 
                             {/* Label */}
-                            <div className="relative z-10 text-white/50 font-medium tracking-widest text-[11px] uppercase mb-1 drop-shadow-sm">
+                            <div className="relative z-10 text-[#0a0a0b]/50 font-medium tracking-widest text-[11px] uppercase mb-1 drop-shadow-sm">
                                 {stat.label}
                             </div>
 
                             {/* Number */}
                             <div
-                                className="relative z-10 font-bold text-white tabular mb-3 drop-shadow-md"
+                                className="relative z-10 font-bold text-[#0a0a0b] tabular mb-3 drop-shadow-md"
                                 style={{
                                     fontSize: "clamp(2.5rem, 4vw, 3.5rem)",
                                     letterSpacing: "-0.04em",
@@ -166,15 +166,15 @@ export default function MetricsSection() {
                 </div>
 
                 {/* Powered by strip */}
-                <div className="flex flex-col md:flex-row items-center justify-between gap-6 md:gap-10 pt-10 pb-6 border-t border-white/5">
-                    <span className="brand-item text-[11px] font-bold text-white/30 uppercase tracking-[0.2em] flex-shrink-0 whitespace-nowrap">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-6 md:gap-10 pt-10 pb-6 border-t border-black/10">
+                    <span className="brand-item text-[11px] font-bold text-[#0a0a0b]/30 uppercase tracking-[0.2em] flex-shrink-0 whitespace-nowrap">
                         Powered by
                     </span>
                     <div className="flex items-center flex-wrap justify-center md:justify-end gap-x-10 gap-y-4">
-                        {BRANDS.map((brand, i) => (
+                        {BRANDS.map((brand) => (
                             <span
                                 key={brand}
-                                className="brand-item text-sm font-semibold text-white/50 hover:text-white transition-colors duration-300 cursor-default"
+                                className="brand-item text-sm font-semibold text-[#0a0a0b]/50 hover:text-[#0a0a0b] transition-colors duration-300 cursor-default"
                             >
                                 {brand}
                             </span>

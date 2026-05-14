@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import Link from "next/link";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, Quote, Star } from "lucide-react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/dist/ScrollTrigger";
@@ -18,34 +18,28 @@ const TESTIMONIALS = [
         role: "Solidity Developer",
         seed: "Ramirez",
         accentColor: "#1DBF73",
-        cardBg: "linear-gradient(145deg, rgba(29,191,115,0.08) 0%, rgba(0,0,0,0.5) 100%)",
-        border: "rgba(29,191,115,0.22)",
-        shadow: "rgba(29,191,115,0.15)",
+        surface: "#E7F8EF",
     },
     {
         quote: "As a client, I felt safe knowing my funds were locked until I approved. No more chargeback anxiety.",
         name: "0xPriya",
         role: "DeFi Startup Founder",
         seed: "Priya",
-        accentColor: "#6366f1",
-        cardBg: "linear-gradient(145deg, rgba(99,102,241,0.08) 0%, rgba(0,0,0,0.5) 100%)",
-        border: "rgba(99,102,241,0.22)",
-        shadow: "rgba(99,102,241,0.15)",
+        accentColor: "#0F9EAC",
+        surface: "#EAF6F7",
     },
     {
         quote: "The AI dispute resolution saved me weeks of back-and-forth. Fair, transparent, and fast.",
         name: "0xTomasz",
         role: "NFT Artist",
         seed: "Tomasz",
-        accentColor: "#f59e0b",
-        cardBg: "linear-gradient(145deg, rgba(245,158,11,0.08) 0%, rgba(0,0,0,0.5) 100%)",
-        border: "rgba(245,158,11,0.22)",
-        shadow: "rgba(245,158,11,0.15)",
+        accentColor: "#B98512",
+        surface: "#FFF8EA",
     },
 ];
 
 export default function CTAFooterSection() {
-    const testimonialRef = useRef<HTMLElement>(null);
+    const testimonialRef = useRef<HTMLDivElement>(null);
     const ctaRef = useRef<HTMLElement>(null);
 
     useGSAP(() => {
@@ -54,16 +48,11 @@ export default function CTAFooterSection() {
             y: 40, opacity: 0, duration: 1, ease: "power3.out"
         });
 
-        gsap.from(".testim-card", {
-            scrollTrigger: { trigger: testimonialRef.current, start: "top 75%" },
-            y: 50, opacity: 0, duration: 0.8, stagger: 0.15, ease: "back.out(1.2)"
-        });
-
         gsap.from(".cta-content", {
             scrollTrigger: { trigger: ctaRef.current, start: "top 70%" },
             y: 60, opacity: 0, duration: 1.2, ease: "power3.out"
         });
-        
+
         gsap.from(".cta-button", {
             scrollTrigger: { trigger: ctaRef.current, start: "top 65%" },
             scale: 0.9, opacity: 0, duration: 0.6, stagger: 0.1, ease: "back.out(1.5)", delay: 0.3
@@ -73,98 +62,73 @@ export default function CTAFooterSection() {
     return (
         <div ref={testimonialRef}>
             {/* ── Testimonials ─────────────────────────────────────────────── */}
-            <section className="py-24 md:py-32 border-b border-white/5 relative z-10 backdrop-blur-[2px]">
+            <section className="relative z-10 overflow-hidden border-b border-black/10 py-12 md:py-14" style={{ backgroundColor: "#fafaf8" }}>
+                <div className="pointer-events-none absolute inset-0 opacity-70" style={{ background: "radial-gradient(circle at 50% 8%, rgba(29,191,115,0.07), transparent 28%)" }} />
                 <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
 
-                    <div className="testim-header text-center mb-20">
-                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 mb-6 backdrop-blur-md">
-                            <span className="w-2 h-2 rounded-full bg-[#1DBF73] flex-shrink-0 shadow-[0_0_8px_#1DBF73]" />
-                            <span className="text-white/80 text-xs font-semibold uppercase tracking-[0.2em]">Testimonials</span>
+                    <div className="testim-header relative mb-8 text-center">
+                        <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#CFE9DA] bg-white px-4 py-2 shadow-[0_12px_34px_rgba(16,24,32,0.05)]">
+                            <span className="h-2 w-2 flex-shrink-0 rounded-full bg-[#1DBF73]" />
+                            <span className="text-xs font-bold uppercase text-[#15945A]" style={{ letterSpacing: 0 }}>Testimonials</span>
                         </div>
                         <h2
-                            className="font-extrabold text-white tracking-tight"
+                            className="font-black text-[#0a0a0b]"
                             style={{ fontSize: "clamp(2rem, 4vw, 3.5rem)", lineHeight: 1.1 }}
                         >
                             Trusted by Web3 builders
                         </h2>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-                        {TESTIMONIALS.map((t, i) => (
+                    <div className="relative grid grid-cols-1 gap-4 md:grid-cols-3">
+                        {TESTIMONIALS.map((t, index) => (
                             <div
                                 key={t.name}
-                                className="testim-card group relative rounded-[2rem] p-8 lg:p-10 flex flex-col overflow-hidden cursor-default transition-transform duration-500 hover:-translate-y-2 backdrop-blur-xl"
-                                style={{
-                                    background: t.cardBg,
-                                    border: `1px solid ${t.border}`,
-                                    boxShadow: `0 8px 32px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.05)`,
-                                }}
+                                className={`testim-card group relative flex min-h-[330px] flex-col overflow-hidden rounded-[30px] border p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_26px_80px_rgba(16,24,32,0.12)] ${index === 1 ? "bg-[#101820] text-white" : "bg-white text-[#101820]"}`}
+                                style={{ borderColor: index === 1 ? "rgba(255,255,255,0.12)" : "#DFE7E2" }}
                             >
-                                {/* Hover border glow */}
-                                <div
-                                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-                                    style={{ boxShadow: `inset 0 0 20px ${t.shadow}` }}
-                                />
+                                <div className="absolute inset-x-0 top-0 h-32" style={{ background: `radial-gradient(circle at 18% 0%, ${t.accentColor}24, transparent 65%)` }} />
 
                                 <div className="relative z-10 flex flex-col flex-1">
                                     {/* Stars + badge */}
-                                    <div className="flex items-center justify-between mb-8">
+                                    <div className="mb-6 flex items-center justify-between">
                                         <div className="flex items-center gap-1">
                                             {[...Array(5)].map((_, j) => (
-                                                <svg key={j} className="w-4 h-4" viewBox="0 0 20 20" fill="#FFBE00" style={{ filter: "drop-shadow(0 0 2px rgba(255,190,0,0.5))" }}>
-                                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                                </svg>
+                                                <Star key={j} className="h-4 w-4 fill-[#FFBE00] text-[#FFBE00]" />
                                             ))}
                                         </div>
                                         <div
-                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-md"
-                                            style={{ background: `${t.accentColor}15`, border: `1px solid ${t.border}` }}
+                                            className="flex items-center gap-1.5 rounded-full border px-3 py-1.5"
+                                            style={{ background: index === 1 ? "rgba(255,255,255,0.08)" : t.surface, borderColor: `${t.accentColor}24` }}
                                         >
                                             <CheckCircle2 className="w-3.5 h-3.5" style={{ color: t.accentColor }} />
-                                            <span className="text-[10px] uppercase tracking-widest font-bold" style={{ color: t.accentColor }}>On-chain</span>
+                                            <span className="text-[10px] uppercase font-bold" style={{ color: t.accentColor, letterSpacing: 0 }}>On-chain</span>
                                         </div>
                                     </div>
 
-                                    {/* Large opening quote */}
-                                    <div
-                                        className="font-black select-none mb-2"
-                                        style={{
-                                            fontSize: 72,
-                                            color: t.accentColor,
-                                            opacity: 0.15,
-                                            lineHeight: 0.5,
-                                            fontFamily: "Georgia, serif",
-                                        }}
-                                    >
-                                        "
-                                    </div>
+                                    <Quote className="mb-4 h-9 w-9" style={{ color: t.accentColor, opacity: 0.45 }} />
 
                                     {/* Quote */}
-                                    <p className="text-white/90 text-[16px] leading-relaxed flex-1 mb-8 font-light italic">
+                                    <p className={`mb-6 flex-1 text-[17px] leading-7 ${index === 1 ? "text-white/[0.82]" : "text-[#24313D]"}`}>
                                         {t.quote}
                                     </p>
 
                                     {/* Gradient divider */}
                                     <div
-                                        className="h-px mb-6"
-                                        style={{ background: `linear-gradient(90deg, ${t.accentColor}50, transparent)` }}
+                                        className="mb-6 h-px"
+                                        style={{ background: `linear-gradient(90deg, ${t.accentColor}55, transparent)` }}
                                     />
 
                                     {/* Author */}
                                     <div className="flex items-center gap-4">
                                         <div
-                                            className="w-12 h-12 rounded-full flex-shrink-0 p-1"
-                                            style={{ background: `linear-gradient(135deg, ${t.accentColor}, ${t.accentColor}20)` }}
+                                            className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-2xl text-sm font-black text-white"
+                                            style={{ background: t.accentColor }}
                                         >
-                                            <img
-                                                src={`https://api.dicebear.com/7.x/initials/svg?seed=${t.seed}&backgroundColor=000&fontColor=ffffff&fontFamily=Arial&fontSize=38`}
-                                                alt={t.name}
-                                                className="w-full h-full rounded-full border-2 border-black"
-                                            />
+                                            {t.seed.slice(0, 2).toUpperCase()}
                                         </div>
                                         <div>
-                                            <div className="text-[15px] font-bold text-white tracking-wide">{t.name}</div>
-                                            <div className="text-xs text-white/50">{t.role}</div>
+                                            <div className={`text-[15px] font-black ${index === 1 ? "text-white" : "text-[#101820]"}`}>{t.name}</div>
+                                            <div className={`text-xs ${index === 1 ? "text-white/[0.52]" : "text-[#64717D]"}`}>{t.role}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -175,7 +139,7 @@ export default function CTAFooterSection() {
             </section>
 
             {/* ── CTA Banner — dark & dramatic ─────────────────────────────── */}
-            <section ref={ctaRef} className="relative z-10 overflow-hidden" style={{ background: "linear-gradient(180deg, transparent 0%, rgba(10,15,30,0.8) 100%)" }}>
+            <section ref={ctaRef} className="relative z-10 overflow-hidden" style={{ background: "linear-gradient(180deg, #0a0a0b 0%, rgba(10,15,30,1) 100%)" }}>
 
                 {/* Grid Overlay */}
                 <div className="absolute inset-0 z-0 pointer-events-none"
@@ -225,6 +189,8 @@ export default function CTAFooterSection() {
                             >
                                 Browse Services
                             </Link>
+
+
                         </div>
 
                         {/* Trust indicators */}

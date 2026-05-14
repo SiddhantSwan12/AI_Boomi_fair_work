@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import Link from "next/link";
 import { ArrowRight, CheckCircle, Star, Shield, Zap } from "lucide-react";
 import gsap from "gsap";
@@ -14,7 +14,7 @@ if (typeof window !== "undefined") {
 // ─── Right-side Mockup for Banner 1 (Client) ────────────────────────────
 function ClientMockup() {
     const rootRef = useRef<HTMLDivElement>(null);
-    
+
     useGSAP(() => {
         // Continuous float animation using GSAP
         gsap.to(".client-main-card", {
@@ -87,7 +87,7 @@ function ClientMockup() {
 // ─── Right-side Mockup for Banner 2 (Freelancer) ────────────────────────────
 function FreelancerMockup() {
     const rootRef = useRef<HTMLDivElement>(null);
-    
+
     useGSAP(() => {
         gsap.to(".free-main-card", {
             y: -15, duration: 4.5, repeat: -1, yoyo: true, ease: "sine.inOut"
@@ -185,7 +185,7 @@ export default function PromoCardsSection() {
     }, { scope: sectionRef });
 
     return (
-        <section ref={sectionRef} className="py-20 md:py-32 relative z-10 backdrop-blur-[2px]">
+        <section ref={sectionRef} className="py-20 md:py-32 relative z-10 backdrop-blur-[2px]" style={{ backgroundColor: "#fafaf8" }}>
             <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8 space-y-8">
 
                 {/* Banner 1 — For Clients (Deep Cinematic Dark) */}
@@ -194,7 +194,7 @@ export default function PromoCardsSection() {
                     style={{
                         background: "linear-gradient(135deg, rgba(20,20,25,0.8) 0%, rgba(10,10,12,0.9) 100%)",
                         border: "1px solid rgba(255,255,255,0.08)",
-                        boxShadow: "0 24px 64px rgba(0,0,0,0.5)",
+                        boxShadow: "0 24px 64px rgba(0,0,0,0.12)",
                         minHeight: 460,
                     }}
                 >
@@ -238,14 +238,14 @@ export default function PromoCardsSection() {
                     style={{
                         background: "linear-gradient(135deg, rgba(10,25,18,0.85) 0%, rgba(5,15,10,0.95) 100%)",
                         border: "1px solid rgba(29,191,115,0.15)",
-                        boxShadow: "0 24px 64px rgba(0,0,0,0.6)",
+                        boxShadow: "0 24px 64px rgba(0,0,0,0.12)",
                         minHeight: 460,
                     }}
                 >
                     {/* Noise texture */}
                     <div className="absolute inset-0 opacity-10"
                         style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`, backgroundSize: "160px 160px" }} />
-                    
+
                     {/* Glow orb */}
                     <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full pointer-events-none"
                         style={{ background: "radial-gradient(circle, rgba(29,191,115,0.12) 0%, transparent 60%)", transform: "translate(20%, -30%)" }} />

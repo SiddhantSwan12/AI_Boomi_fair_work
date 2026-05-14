@@ -52,7 +52,7 @@ const MarketingIcon = () => (
 
 const categories = [
     { name: "Web Development", sub: "dApps · Smart Contracts · APIs",    Icon: WebDevIcon,    accentClass: "from-[#E9F9F0] to-[#D1FAE5]",  borderClass: "border-[#1DBF73]/20", glowClass: "bg-[#1DBF73]/10" },
-    { name: "AI Services",     sub: "Agents · Automation · ML Models",   Icon: AIIcon,        accentClass: "from-[#EEF2FF] to-[#E0E7FF]",  borderClass: "border-[#6366f1]/20", glowClass: "bg-[#6366f1]/10" },
+    { name: "AI Services",     sub: "Agents · Automation · ML Models",   Icon: AIIcon,        accentClass: "from-[#EAF6F7] to-[#D5EEF1]",  borderClass: "border-[#0F9EAC]/20", glowClass: "bg-[#0F9EAC]/10" },
     { name: "Graphic Design",  sub: "UI/UX · Branding · NFT Art",        Icon: DesignIcon,    accentClass: "from-[#FFF7ED] to-[#FED7AA]",  borderClass: "border-[#F59E0B]/20", glowClass: "bg-[#F59E0B]/10" },
     { name: "Digital Marketing",sub: "Web3 Growth · DAOs · Community",   Icon: MarketingIcon, accentClass: "from-[#FFF1F2] to-[#FFE4E6]",  borderClass: "border-[#F43F5E]/20", glowClass: "bg-[#F43F5E]/10" },
 ];
@@ -87,7 +87,7 @@ const testimonials = [
     {
         quote: "Audited three smart contracts through FairWork. Each job was escrowed upfront — I never worried about payment. The on-chain history also became part of my portfolio.",
         author: "Elena Rodriguez", role: "Smart Contract Auditor", initials: "ER",
-        gradient: "from-[#8B5CF6] to-[#6D28D9]",
+        gradient: "from-[#0F9EAC] to-[#0F7C86]",
         metric: "3 audits", metricLabel: "all paid on-chain", tag: "Solidity · Security",
     },
 ];
@@ -120,18 +120,14 @@ export default function DashboardPage() {
     }, []);
 
     return (
-        <div className="min-h-screen bg-backdrop text-text-primary">
+        <div className="fw-product-shell fw-unified-page">
             <Navbar />
 
             {/* ── Hero ──────────────────────────────────────────────────────────── */}
             <section className="relative overflow-hidden">
-                {/* Ambient blobs */}
-                <div className="absolute -top-40 -left-40 w-[600px] h-[600px] bg-accent-indigo/8 rounded-full blur-[120px] pointer-events-none" />
-                <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-accent-violet/6 rounded-full blur-[100px] pointer-events-none" />
-
                 <div className="absolute inset-0 z-0">
-                    <Image src="/images/hero.png" alt="Professionals collaborating" fill className="object-cover opacity-20" priority />
-                    <div className="absolute inset-0 bg-gradient-to-r from-backdrop/95 via-backdrop/70 to-transparent" />
+                    <Image src="/images/hero.png" alt="Professionals collaborating" fill className="object-cover opacity-10" priority />
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#F6F9F7]/95 via-[#F6F9F7]/82 to-[#F6F9F7]/60" />
                 </div>
 
                 <div className="relative z-10 max-w-[1600px] mx-auto px-6 py-28 lg:py-40">
@@ -145,7 +141,7 @@ export default function DashboardPage() {
                         {/* Headline */}
                         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-text-primary mb-6 leading-[1.1] font-heading">
                             Find the perfect{" "}
-                            <span className="bg-gradient-to-r from-accent-indigo to-accent-violet bg-clip-text text-transparent">
+                            <span className="text-[#15945A]">
                                 freelance
                             </span>{" "}
                             services for your business
@@ -156,7 +152,7 @@ export default function DashboardPage() {
                         </p>
 
                         {/* Search */}
-                        <div className="flex items-center gap-3 bg-surface-elevated/80 border border-surface-border rounded-2xl p-2 max-w-xl mb-6 focus-within:border-accent-indigo/40 transition-colors backdrop-blur-sm">
+                        <div className="flex items-center gap-3 bg-white border border-[#DFE7E2] rounded-lg p-2 max-w-xl mb-6 focus-within:border-[#1DBF73]/60 transition-colors">
                             <Search className="w-5 h-5 text-text-muted ml-3 shrink-0" />
                             <input
                                 type="text"
@@ -166,7 +162,7 @@ export default function DashboardPage() {
                                 className="flex-1 bg-transparent text-text-primary placeholder:text-text-subtle text-sm outline-none"
                             />
                             <Link href="/jobs">
-                                <button className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-accent-indigo to-accent-violet text-white rounded-xl text-sm font-medium hover:opacity-90 transition-opacity shadow-glow-sm">
+                                <button className="flex items-center gap-2 px-5 py-2.5 bg-[#1DBF73] text-white rounded-lg text-sm font-semibold hover:bg-[#15945A] transition-colors">
                                     Search <ArrowRight className="w-4 h-4" />
                                 </button>
                             </Link>
@@ -177,7 +173,7 @@ export default function DashboardPage() {
                             <span className="text-text-subtle text-sm">Popular:</span>
                             {["Smart Contracts", "Web3 Apps", "AI Agents", "DeFi"].map((tag) => (
                                 <Link key={tag} href="/jobs"
-                                    className="px-4 py-1.5 bg-surface-elevated border border-surface-border rounded-full text-sm text-text-muted hover:text-text-primary hover:border-accent-indigo/30 transition-all">
+                                    className="px-4 py-1.5 bg-white border border-[#DFE7E2] rounded-lg text-sm text-[#64717D] hover:text-[#15945A] hover:border-[#1DBF73]/40 transition-all">
                                     {tag}
                                 </Link>
                             ))}
@@ -218,12 +214,9 @@ export default function DashboardPage() {
                     <div ref={cardsRef} className="grid grid-cols-2 lg:grid-cols-4 gap-5">
                         {categories.map((cat) => (
                             <Link key={cat.name} href="/jobs">
-                                <div className={`cat-card group relative rounded-2xl p-6 text-center overflow-hidden cursor-pointer transition-all duration-300 bg-gradient-to-br ${cat.accentClass} border ${cat.borderClass} hover:-translate-y-1 hover:shadow-glow-sm`}>
-                                    {/* Glow orb */}
-                                    <div className={`absolute -top-6 left-1/2 -translate-x-1/2 w-20 h-20 rounded-full blur-2xl opacity-40 group-hover:opacity-70 transition-opacity duration-300 ${cat.glowClass}`} />
-
+                                <div className={`cat-card group relative rounded-lg p-6 text-center overflow-hidden cursor-pointer transition-all duration-200 bg-white border ${cat.borderClass} hover:border-[#1DBF73]/40 hover:shadow-card`}>
                                     {/* Icon */}
-                                    <div className="relative flex items-center justify-center w-16 h-16 mx-auto mb-5 rounded-2xl bg-white border border-[#E4E5E7] group-hover:scale-105 transition-transform duration-300">
+                                    <div className="relative flex items-center justify-center w-16 h-16 mx-auto mb-5 rounded-lg bg-white border border-[#E4E5E7] group-hover:scale-105 transition-transform duration-200">
                                         <cat.Icon />
                                     </div>
 

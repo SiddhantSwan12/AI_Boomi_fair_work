@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { rateLimit, getIp } from "@/lib/rate-limit";
 
 /**
  * API Route: Legal Document Report
@@ -90,6 +91,14 @@ Use this EXACT HTML structure (no markdown, no code blocks — return ONLY raw H
 Use professional legal language. Be thorough, formal, and precise. Use numbered sub-points where appropriate. Return ONLY the HTML, no wrapping code blocks.`;
 
 export async function POST(request: NextRequest) {
+    const { allowed, retryAfter } = rateLimit(getIp(request), { max: 10 });
+    if (!allowed) {
+        return NextResponse.json(
+            { error: "Too many requests. Please slow down." },
+            { status: 429, headers: { "Retry-After": String(retryAfter) } }
+        );
+    }
+
     const FASTROUTER_API_KEY = process.env.FASTROUTER_API_KEY;
     const NUGEN_API_KEY = process.env.NUGEN_API_KEY;
     const OPENAI_API_KEY = process.env.OPENAI_API_KEY;

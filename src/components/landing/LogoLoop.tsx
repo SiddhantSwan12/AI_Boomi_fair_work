@@ -209,7 +209,7 @@ export const LogoLoop = React.memo<LogoLoopProps>(({
 
   const [seqWidth, setSeqWidth] = useState(0);
   const [seqHeight, setSeqHeight] = useState(0);
-  const [copyCount, setCopyCount] = useState(ANIMATION_CONFIG.MIN_COPIES);
+  const [copyCount, setCopyCount] = useState<number>(ANIMATION_CONFIG.MIN_COPIES);
   const [isHovered, setIsHovered] = useState(false);
 
   const effectiveHoverSpeed = useMemo(() => {
@@ -284,6 +284,7 @@ export const LogoLoop = React.memo<LogoLoopProps>(({
     }
 
     const isNodeItem = 'node' in item;
+    /* eslint-disable @typescript-eslint/no-explicit-any */
     const content = isNodeItem ? (
       <span className={cx('inline-flex items-center', 'motion-reduce:transition-none', scaleOnHover && 'transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] group-hover/item:scale-120')} aria-hidden={!!(item as any).href && !(item as any).ariaLabel}>
         {(item as any).node}
@@ -298,6 +299,7 @@ export const LogoLoop = React.memo<LogoLoopProps>(({
         {content}
       </a>
     ) : content;
+    /* eslint-enable @typescript-eslint/no-explicit-any */
 
     return (
       <li className={cx('flex-none text-[length:var(--logoloop-logoHeight)] leading-[1]', isVertical ? 'mb-[var(--logoloop-gap)]' : 'mr-[var(--logoloop-gap)]', scaleOnHover && 'overflow-visible group/item')} key={key} role="listitem">

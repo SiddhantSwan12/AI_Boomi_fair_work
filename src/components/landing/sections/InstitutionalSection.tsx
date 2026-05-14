@@ -2,11 +2,10 @@
 
 import { useRef } from "react";
 import Link from "next/link";
-import { Star } from "lucide-react";
+import { ArrowUpRight, Star } from "lucide-react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/dist/ScrollTrigger";
-import BorderGlow from "@/components/landing/BorderGlow";
 
 if (typeof window !== "undefined") {
     gsap.registerPlugin(ScrollTrigger);
@@ -14,186 +13,130 @@ if (typeof window !== "undefined") {
 
 const GIGS = [
     {
-        id: 1,
-        title: "I will build a secure Solidity smart contract with audit",
+        title: "Solidity escrow contract audit",
         seller: "0xAlexW",
-        avatar: "https://api.dicebear.com/7.x/initials/svg?seed=Alex&backgroundColor=1DBF73&fontFamily=Arial&fontSize=40",
-        rating: 4.9,
-        reviews: 312,
-        price: 299,
+        initials: "AW",
+        rating: "4.9",
+        reviews: "312",
+        price: "$299",
         badge: "Top Rated",
-        image: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&h=240&fit=crop&q=80",
         tags: ["Solidity", "Audit"],
+        accent: "#1DBF73",
     },
     {
-        id: 2,
-        title: "I will design a full Web3 dApp UI with Figma + React",
+        title: "Web3 product dashboard design",
         seller: "0xMariaD",
-        avatar: "https://api.dicebear.com/7.x/initials/svg?seed=Maria&backgroundColor=7c3aed&fontFamily=Arial&fontSize=40",
-        rating: 5.0,
-        reviews: 187,
-        price: 149,
+        initials: "MD",
+        rating: "5.0",
+        reviews: "187",
+        price: "$149",
         badge: "Pro",
-        image: "https://images.unsplash.com/photo-1551650975-87deedd944c3?w=400&h=240&fit=crop&q=80",
-        tags: ["React", "UI/UX"],
+        tags: ["Figma", "React"],
+        accent: "#0F9EAC",
     },
     {
-        id: 3,
-        title: "I will create a DeFi protocol integration for your platform",
+        title: "DeFi protocol integration",
         seller: "0xChrisK",
-        avatar: "https://api.dicebear.com/7.x/initials/svg?seed=Chris&backgroundColor=f59e0b&fontFamily=Arial&fontSize=40",
-        rating: 4.8,
-        reviews: 94,
-        price: 499,
+        initials: "CK",
+        rating: "4.8",
+        reviews: "94",
+        price: "$499",
         badge: "Expert",
-        image: "https://images.unsplash.com/photo-1620321023374-d1a68fbc720d?w=400&h=240&fit=crop&q=80",
         tags: ["DeFi", "TypeScript"],
+        accent: "#B98512",
     },
     {
-        id: 4,
-        title: "I will launch your NFT collection with metadata and contract",
+        title: "NFT metadata and mint flow",
         seller: "0xSophieL",
-        avatar: "https://api.dicebear.com/7.x/initials/svg?seed=Sophie&backgroundColor=ef4444&fontFamily=Arial&fontSize=40",
-        rating: 4.7,
-        reviews: 231,
-        price: 399,
-        badge: "Rising Talent",
-        image: "https://images.unsplash.com/photo-1643101808200-0d159c1331f9?w=400&h=240&fit=crop&q=80",
+        initials: "SL",
+        rating: "4.7",
+        reviews: "231",
+        price: "$399",
+        badge: "Rising",
         tags: ["NFT", "IPFS"],
+        accent: "#15945A",
     },
 ];
-
-const BADGE_STYLES: Record<string, string> = {
-    "Top Rated":    "bg-[#1DBF73]/20 text-[#1DBF73] border-[#1DBF73]/30",
-    "Pro":          "bg-purple-500/20 text-purple-400 border-purple-500/30",
-    "Expert":       "bg-blue-500/20 text-blue-400 border-blue-500/30",
-    "Rising Talent":"bg-rose-500/20 text-rose-400 border-rose-500/30",
-};
 
 export default function InstitutionalSection() {
     const containerRef = useRef<HTMLElement>(null);
 
     useGSAP(() => {
         gsap.from(".inst-header", {
-            scrollTrigger: {
-                trigger: containerRef.current,
-                start: "top 80%",
-            },
-            y: 40,
+            scrollTrigger: { trigger: containerRef.current, start: "top 80%" },
+            y: 34,
             opacity: 0,
-            duration: 1,
-            ease: "power3.out"
+            duration: 0.9,
+            ease: "power3.out",
         });
 
-        gsap.from(".inst-card", {
-            scrollTrigger: {
-                trigger: containerRef.current,
-                start: "top 75%",
-            },
-            y: 50,
-            opacity: 0,
-            duration: 0.8,
-            stagger: 0.1,
-            ease: "back.out(1.2)"
-        });
     }, { scope: containerRef });
 
     return (
-        <section ref={containerRef} className="py-24 relative z-10 backdrop-blur-[2px]">
+        <section ref={containerRef} className="relative z-10 overflow-hidden py-10 md:py-12" style={{ backgroundColor: "#fafaf8" }}>
+            <div className="pointer-events-none absolute inset-0 opacity-70" style={{ background: "radial-gradient(circle at 12% 20%, rgba(29,191,115,0.075), transparent 26%), radial-gradient(circle at 90% 10%, rgba(15,158,172,0.07), transparent 26%)" }} />
             <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
-
-                {/* Header */}
-                <div className="inst-header flex flex-col sm:flex-row items-end justify-between mb-16 gap-6">
-                    <div>
-                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 mb-6 backdrop-blur-md">
-                            <span className="w-2 h-2 rounded-full bg-[#1DBF73] shadow-[0_0_8px_#1DBF73]" />
-                            <span className="text-white/80 text-xs font-semibold uppercase tracking-[0.2em]">Elite Talent</span>
+                <div className="relative grid gap-5 rounded-[36px] border border-[#DFE7E2] bg-white/78 p-4 shadow-[0_26px_90px_rgba(16,24,32,0.07)] backdrop-blur-xl md:p-6 lg:grid-cols-[0.62fr_1.38fr] lg:p-7">
+                    <div className="inst-header rounded-[28px] bg-[#F5FAF7] p-7 md:p-8 lg:min-h-[440px]">
+                        <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#CFE9DA] bg-white px-4 py-2 shadow-[0_12px_34px_rgba(16,24,32,0.05)]">
+                            <span className="h-2 w-2 rounded-full bg-[#1DBF73]" />
+                            <span className="text-xs font-bold uppercase text-[#15945A]" style={{ letterSpacing: 0 }}>Elite talent</span>
                         </div>
-                        <h2
-                            className="font-bold text-white mb-3"
-                            style={{ fontSize: "clamp(2rem, 3.5vw, 3rem)", letterSpacing: "-0.04em", lineHeight: 1.1 }}
-                        >
-                            Hire world-class<br/>Web3 developers
+                        <h2 className="font-black text-[#0a0a0b]" style={{ fontSize: "clamp(2.1rem, 3.6vw, 4rem)", lineHeight: 1 }}>
+                            Premium Web3 services.
                         </h2>
-                        <p className="text-[#A1A1AA] text-lg font-light tracking-wide">Verified on-chain talent, ready to build.</p>
+                        <p className="mt-5 max-w-md text-base leading-8 text-[#64717D]">Marketplace cards with skill, proof, pricing, and escrow confidence in one glance.</p>
+                        <div className="mt-8 grid grid-cols-2 gap-3">
+                            <div className="rounded-2xl border border-[#DFE7E2] bg-white p-4">
+                                <p className="text-2xl font-black text-[#101820]">4.9</p>
+                                <p className="mt-1 text-xs font-bold uppercase text-[#64717D]" style={{ letterSpacing: 0 }}>Avg rating</p>
+                            </div>
+                            <div className="rounded-2xl border border-[#DFE7E2] bg-white p-4">
+                                <p className="text-2xl font-black text-[#101820]">$299+</p>
+                                <p className="mt-1 text-xs font-bold uppercase text-[#64717D]" style={{ letterSpacing: 0 }}>Starting</p>
+                            </div>
+                        </div>
+                        <Link href="/jobs" className="mt-7 inline-flex items-center justify-center gap-2 rounded-full bg-[#101820] px-6 py-3.5 text-sm font-bold text-white transition-all hover:bg-[#15945A]">
+                            View all talent <ArrowUpRight className="h-4 w-4" />
+                        </Link>
                     </div>
-                    <Link
-                        href="/jobs"
-                        className="inline-flex items-center justify-center gap-2 text-[15px] font-semibold px-8 py-3.5 rounded-full border border-white/20 text-white hover:bg-white/10 transition-colors duration-300 bg-white/5 backdrop-blur-md"
-                    >
-                        View all talent →
-                    </Link>
-                </div>
 
-                {/* Gig cards grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                    {GIGS.map((gig) => (
-                        <BorderGlow
-                            key={gig.id}
-                            className="inst-card group cursor-pointer transition-transform duration-300 hover:-translate-y-2 h-full"
-                            borderRadius={24}
-                            glowIntensity={0.9}
-                            coneSpread={60}
-                            backgroundColor="rgba(10, 10, 22, 0.85)"
-                        >
-                            <Link
-                                href="/jobs"
-                                className="group overflow-hidden flex flex-col h-full rounded-[24px]"
-                            >
-                                {/* Thumbnail */}
-                                <div className="relative overflow-hidden aspect-[4/2.5] flex-shrink-0">
-                                    <div className="absolute inset-0 bg-black/40 z-10 group-hover:bg-transparent transition-colors duration-500" />
-                                    <img
-                                        src={gig.image}
-                                        alt={gig.title}
-                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                                    />
-                                    <div className="absolute bottom-4 left-4 z-20">
-                                        <img src={gig.avatar} alt={gig.seller} className="w-10 h-10 rounded-full border-2 border-[#1E1E1E] shadow-[0_4px_12px_rgba(0,0,0,0.5)]" />
+                    <div className="relative grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                        {GIGS.map((gig) => (
+                            <Link key={gig.title} href="/jobs" className="inst-card group overflow-hidden rounded-[28px] border border-[#DFE7E2] bg-white p-3 shadow-[0_18px_55px_rgba(16,24,32,0.06)] transition-all duration-300 hover:-translate-y-1 hover:border-[#15945A]/30 hover:shadow-[0_28px_80px_rgba(16,24,32,0.11)]">
+                                <div className="relative overflow-hidden rounded-[22px] p-5" style={{ background: `linear-gradient(135deg, ${gig.accent}24, #F8FBF9 65%)` }}>
+                                    <div className="absolute right-4 top-4 rounded-full border border-white/70 bg-white/70 px-3 py-1 text-[11px] font-bold text-[#24313D] backdrop-blur">
+                                        {gig.badge}
                                     </div>
-                                </div>
-
-                                {/* Card body */}
-                                <div className="p-6 flex flex-col flex-1">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <span className="text-[13px] font-medium text-white/60 font-mono tracking-wider">{gig.seller}</span>
-                                        <span className={`text-[10px] uppercase font-bold px-2.5 py-1 rounded-full border tracking-wider ${BADGE_STYLES[gig.badge]}`}>
-                                            {gig.badge}
-                                        </span>
+                                    <div className="grid h-14 w-14 place-items-center rounded-2xl text-base font-black text-white shadow-[0_14px_34px_rgba(16,24,32,0.16)]" style={{ background: gig.accent }}>
+                                        {gig.initials}
                                     </div>
-
-                                    <p
-                                        className="font-medium text-white leading-relaxed mb-5 line-clamp-2 flex-1 group-hover:text-white/80 transition-colors duration-300"
-                                        style={{ fontSize: "16px" }}
-                                    >
-                                        {gig.title}
-                                    </p>
-
-                                    <div className="flex gap-2 mb-5 flex-wrap">
+                                    <div className="mt-8 flex flex-wrap gap-2">
                                         {gig.tags.map((tag) => (
-                                            <span key={tag} className="text-xs px-3 py-1 rounded-full bg-white/5 text-white/50 border border-white/10">
+                                            <span key={tag} className="rounded-full bg-white/80 px-3 py-1 text-xs font-bold text-[#24313D]">
                                                 {tag}
                                             </span>
                                         ))}
                                     </div>
+                                </div>
 
-                                    <div className="flex items-center justify-between pt-4 border-t border-white/10">
-                                        <div className="flex items-center gap-1.5">
-                                            <Star className="w-4 h-4 fill-[#f59e0b] text-[#f59e0b]" />
-                                            <span className="text-sm font-semibold text-white">{gig.rating}</span>
-                                            <span className="text-xs text-white/40">({gig.reviews})</span>
-                                        </div>
-                                        <div className="text-right">
-                                            <span className="text-[10px] text-white/40 block uppercase tracking-widest mb-1">Starting at</span>
-                                            <span className="text-lg font-bold text-white">
-                                                ${gig.price} <span className="text-xs font-normal text-white/40">USDC</span>
-                                            </span>
-                                        </div>
+                                <div className="px-2 pb-2 pt-5">
+                                    <div className="mb-3 flex items-center justify-between gap-3">
+                                        <span className="font-mono text-sm font-bold text-[#64717D]">{gig.seller}</span>
+                                        <span className="flex items-center gap-1 text-sm font-bold text-[#101820]">
+                                            <Star className="h-4 w-4 fill-[#B98512] text-[#B98512]" />
+                                            {gig.rating}
+                                        </span>
+                                    </div>
+                                    <p className="min-h-[50px] text-[16px] font-black leading-snug text-[#101820] transition-colors group-hover:text-[#15945A]">{gig.title}</p>
+                                    <div className="mt-4 flex items-end justify-between border-t border-[#E7EEE9] pt-4">
+                                        <span className="text-xs font-semibold text-[#8B959F]">{gig.reviews} reviews</span>
+                                        <span className="text-right text-lg font-black text-[#101820]">{gig.price} <span className="text-xs font-semibold text-[#8B959F]">USDC</span></span>
                                     </div>
                                 </div>
                             </Link>
-                        </BorderGlow>
-                    ))}
+                        ))}
+                    </div>
                 </div>
             </div>
         </section>

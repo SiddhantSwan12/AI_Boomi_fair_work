@@ -2,211 +2,111 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Menu, X, Search } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 
 const NAV_LINKS = [
-    { label: "Browse Jobs", href: "/jobs" },
-    { label: "How It Works", href: "#how-it-works" },
-    { label: "Why FairWork", href: "#why-fairwork" },
-];
-
-const SCROLL_CATEGORIES = [
-    "Smart Contracts", "DApp Development", "Web3 Design",
-    "DeFi Protocols", "NFT Projects", "AI Agents", "Auditing",
+  { label: "Browse Jobs",    href: "/jobs"             },
+  { label: "How It Works",   href: "#how-it-works"     },
+  { label: "Become a Juror", href: "/jurors/register"  },
 ];
 
 export default function LandingNavbar() {
-    const [scrolled, setScrolled] = useState(false);
-    const [mobileOpen, setMobileOpen] = useState(false);
-    const [searchVal, setSearchVal] = useState("");
+  // "dark" = over the dark hero → text should be white
+  // "light" = over white sections → text should be #0a0a0b
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
 
-    useEffect(() => {
-        const onScroll = () => setScrolled(window.scrollY > 72);
-        window.addEventListener("scroll", onScroll, { passive: true });
-        return () => window.removeEventListener("scroll", onScroll);
-    }, []);
+  useEffect(() => {
+    const hero = document.querySelector<HTMLElement>("[data-section='hero']");
+    if (!hero) return;
 
-    return (
-        <header
-            className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
-                scrolled
-                    ? "bg-[#0a0f1e]/80 backdrop-blur-xl border-b border-white/10"
-                    : "bg-transparent border-b border-transparent"
-            }`}
-        >
-            {/* ── Main bar ── */}
-            <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
-                <div className="flex h-16 items-center justify-between gap-4">
-
-                    {/* Logo */}
-                    <Link href="/" className="flex items-center gap-2.5 flex-shrink-0 group">
-                        <div
-                            className="w-8 h-8 rounded-[9px] flex items-center justify-center flex-shrink-0 transition-transform duration-200 group-hover:scale-105"
-                            style={{ background: "linear-gradient(135deg, #1DBF73 0%, #17a862 100%)", boxShadow: "0 2px 8px rgba(29,191,115,0.30)" }}
-                        >
-                            <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-                                <path d="M3 8.5L6.5 12L13 4" stroke="white" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                        </div>
-                        <span className="font-bold text-[17px] tracking-tight transition-colors duration-300 text-white">
-                            FairWork
-                        </span>
-                    </Link>
-
-                    {/* Scroll-activated compact search */}
-                    <AnimatePresence>
-                        {scrolled && (
-                            <motion.div
-                                className="hidden md:flex flex-1 max-w-xs mx-4"
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.95 }}
-                                transition={{ type: "spring", stiffness: 200, damping: 22 }}
-                            >
-                                <div className="flex items-center w-full rounded-full border border-white/10 bg-white/5 overflow-hidden hover:border-[#1DBF73]/50 transition-colors duration-200">
-                                    <Search className="w-3.5 h-3.5 text-white/50 ml-3.5 flex-shrink-0" />
-                                    <input
-                                        type="text"
-                                        value={searchVal}
-                                        onChange={(e) => setSearchVal(e.target.value)}
-                                        placeholder="Search services..."
-                                        className="flex-1 text-white text-sm placeholder:text-white/40 outline-none bg-transparent px-3 py-2.5 min-w-0"
-                                        aria-label="Search services"
-                                    />
-                                    <Link
-                                        href={`/jobs${searchVal ? `?q=${encodeURIComponent(searchVal)}` : ""}`}
-                                        className="m-1 px-4 py-1.5 rounded-full bg-[#1DBF73] hover:bg-[#19A463] text-black text-xs font-bold transition-colors duration-150 flex-shrink-0"
-                                    >
-                                        Go
-                                    </Link>
-                                </div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-
-                    {/* Desktop nav links — only when at top */}
-                    <nav
-                        className={`hidden md:flex items-center gap-1 transition-all duration-300 ${
-                            scrolled ? "opacity-0 pointer-events-none absolute" : "opacity-100"
-                        }`}
-                    >
-                        {NAV_LINKS.map((link) => (
-                            <Link
-                                key={link.href}
-                                href={link.href}
-                                className="relative px-4 py-2 rounded-lg text-[13px] font-medium text-white/75 hover:text-white transition-colors duration-150 group"
-                            >
-                                {link.label}
-                                <span className="absolute bottom-1 left-4 right-4 h-px bg-white/50 scale-x-0 group-hover:scale-x-100 transition-transform duration-200 origin-left rounded-full" />
-                            </Link>
-                        ))}
-                    </nav>
-
-                    {/* Right actions */}
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                        <Link
-                            href="/register"
-                            className="hidden sm:inline-flex items-center px-3.5 py-2 text-[13px] font-semibold rounded-lg transition-all duration-200 text-white/80 hover:text-white hover:bg-white/10"
-                        >
-                            Sign In
-                        </Link>
-                        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
-                            <Link
-                                href="/register"
-                                className="inline-flex items-center px-4 py-2 rounded-full text-[13px] font-bold text-black transition-all duration-200"
-                                style={{
-                                    background: "linear-gradient(135deg, #1DBF73 0%, #17a862 100%)",
-                                    boxShadow: "0 2px 8px rgba(29,191,115,0.28)",
-                                }}
-                            >
-                                Join FairWork
-                            </Link>
-                        </motion.div>
-                        <button
-                            className={`md:hidden p-2 rounded-lg transition-colors ${
-                                scrolled ? "text-[#6B7280] hover:bg-[#F3F4F6]" : "text-white hover:bg-white/10"
-                            }`}
-                            onClick={() => setMobileOpen(!mobileOpen)}
-                            aria-label="Toggle menu"
-                        >
-                            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {/* ── Scroll-activated category strip ── */}
-            <AnimatePresence>
-                {scrolled && (
-                    <motion.div
-                        className="hidden md:block border-t border-white/10 bg-[#0a0f1e]/90 backdrop-blur-xl"
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.22, ease: "easeOut" }}
-                    >
-                        <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
-                            <div className="flex items-center gap-0.5 py-2 overflow-x-auto scrollbar-hide">
-                                {SCROLL_CATEGORIES.map((cat, i) => (
-                                    <motion.div
-                                        key={cat}
-                                        initial={{ opacity: 0, y: -6 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: i * 0.035, type: "spring", stiffness: 150, damping: 22 }}
-                                    >
-                                        <Link
-                                            href={`/jobs?category=${encodeURIComponent(cat)}`}
-                                            className="whitespace-nowrap px-3 py-1.5 text-[12.5px] font-medium text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-150 flex-shrink-0"
-                                        >
-                                            {cat}
-                                        </Link>
-                                    </motion.div>
-                                ))}
-                            </div>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* ── Mobile drawer ── */}
-            <AnimatePresence>
-                {mobileOpen && (
-                    <motion.div
-                        className="md:hidden bg-[#0a0f1e]/95 backdrop-blur-xl border-t border-white/10 px-4 py-3 space-y-0.5"
-                        initial={{ opacity: 0, y: -8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -8 }}
-                        transition={{ type: "spring", stiffness: 220, damping: 28 }}
-                    >
-                        {NAV_LINKS.map((link) => (
-                            <Link
-                                key={link.href}
-                                href={link.href}
-                                onClick={() => setMobileOpen(false)}
-                                className="block px-4 py-2.5 rounded-xl text-[13.5px] font-medium text-white/80 hover:bg-white/10 hover:text-white transition-colors"
-                            >
-                                {link.label}
-                            </Link>
-                        ))}
-                        <div className="pt-2 border-t border-white/10 flex flex-col gap-2 mt-1">
-                            <Link
-                                href="/register"
-                                className="px-4 py-2.5 rounded-xl text-[13.5px] font-medium text-white/80 hover:bg-white/10 hover:text-white transition-colors"
-                            >
-                                Sign In
-                            </Link>
-                            <Link
-                                href="/register"
-                                className="inline-flex justify-center items-center px-4 py-2.5 rounded-full text-[13.5px] font-bold text-black"
-                                style={{ background: "linear-gradient(135deg, #1DBF73 0%, #17a862 100%)" }}
-                            >
-                                Join FairWork
-                            </Link>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </header>
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        // When the hero is no longer intersecting the top ~30% of viewport → light nav
+        setTheme(entry.isIntersecting ? "dark" : "light");
+      },
+      { threshold: 0.15 }
     );
+    observer.observe(hero);
+    return () => observer.disconnect();
+  }, []);
+
+  const isDark = theme === "dark";
+  const textColor = isDark ? "rgba(255,255,255,0.92)" : "#0a0a0b";
+  const mutedColor = isDark ? "rgba(255,255,255,0.55)" : "rgba(10,10,11,0.50)";
+  const signUpBg   = isDark ? "rgba(255,255,255,1)"  : "#0a0a0b";
+  const signUpText = isDark ? "#0a0a0b" : "#ffffff";
+  const logInHover = isDark ? "rgba(255,255,255,0.10)" : "rgba(10,10,11,0.06)";
+
+  return (
+    <header
+      className="sticky top-0 z-50 -mb-[72px]"
+      style={{
+        height: 72,
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr 1fr",
+        alignItems: "center",
+        padding: "0 32px",
+        background: "transparent",
+        color: textColor,
+        transition: "color 0.5s ease",
+        /* isolate so backdrop-filter children don't bleed */
+        isolation: "isolate",
+      }}
+    >
+      {/* ── Left: Logo + nav links ── */}
+      <div className="flex items-center gap-6">
+        {/* Logo wordmark */}
+        <Link
+          href="/"
+          className="font-semibold text-[16px] tracking-tight"
+          style={{ color: textColor, letterSpacing: "-0.03em", transition: "color 0.5s ease" }}
+        >
+          FairWork
+        </Link>
+
+        {/* Nav links */}
+        {NAV_LINKS.map((link) => (
+          <Link
+            key={link.href}
+            href={link.href}
+            className="hidden md:block text-[14px] font-medium transition-opacity duration-150 hover:opacity-70"
+            style={{ color: textColor, transition: "color 0.5s ease, opacity 0.15s ease" }}
+          >
+            {link.label}
+          </Link>
+        ))}
+      </div>
+
+      {/* ── Center: empty (or search on inner pages) ── */}
+      <div />
+
+      {/* ── Right: Log in + Sign up ── */}
+      <div className="flex items-center gap-2 justify-end">
+        <Link
+          href="/register"
+          className="hidden sm:inline-flex items-center px-4 py-3 rounded-full text-[14px] font-medium transition-all duration-150"
+          style={{
+            color: mutedColor,
+            transition: "color 0.5s ease, background 0.15s ease",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = logInHover)}
+          onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+        >
+          Log in
+        </Link>
+
+        <Link
+          href="/register"
+          className="inline-flex items-center px-4 py-3 rounded-full text-[14px] font-medium transition-all duration-300"
+          style={{
+            background: signUpBg,
+            color: signUpText,
+            transition: "background 0.5s ease, color 0.5s ease",
+            fontWeight: 520,
+          }}
+        >
+          Sign up
+        </Link>
+      </div>
+    </header>
+  );
 }

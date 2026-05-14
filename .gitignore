@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+**/node_modules/
 node_modules 2/
 .pnp
 .pnp.js
@@ -9,6 +10,7 @@ coverage/
 
 # Next.js
 .next/
+**/.next/
 out/
 build/
 dist/
@@ -63,6 +65,11 @@ contracts/broadcast/
 .agent/
 .stitch/
 .claude/worktrees/
+.claude/settings.local.json
 
 # Research paper
 research_paper/
+
+# Experimental / scratch projects
+my-clone/
+.archive/

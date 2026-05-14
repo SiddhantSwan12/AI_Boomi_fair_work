@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readFile } from "fs/promises";
+import { rateLimit, getIp } from "@/lib/rate-limit";
 import { join } from "path";
 
 /**
@@ -10,6 +11,14 @@ import { join } from "path";
  * Returns structured JSON analysis of dispute
  */
 export async function POST(request: NextRequest) {
+    const { allowed, retryAfter } = rateLimit(getIp(request), { max: 10 });
+    if (!allowed) {
+        return NextResponse.json(
+            { error: "Too many requests. Please slow down." },
+            { status: 429, headers: { "Retry-After": String(retryAfter) } }
+        );
+    }
+
     try {
         const body = await request.json();
         const { jobDescription, deliverable, clientEvidence, freelancerEvidence } = body;

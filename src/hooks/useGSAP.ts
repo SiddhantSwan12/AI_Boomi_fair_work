@@ -19,15 +19,20 @@ export function useGSAP(callback: GSAPContextCallback, deps: unknown[] = []) {
         Promise.all([
             import("gsap").then((m) => m.gsap ?? m.default),
             import("gsap/ScrollTrigger").then((m) => m.ScrollTrigger ?? m.default),
-        ]).then(([gsap, ScrollTrigger]) => {
-            gsap.registerPlugin(ScrollTrigger);
-            ctx = gsap.context(() => {
-                const userCleanup = callback(gsap);
-                if (typeof userCleanup === "function") {
-                    cleanupRef.current = userCleanup;
-                }
+        ])
+            .then(([gsap, ScrollTrigger]) => {
+                gsap.registerPlugin(ScrollTrigger);
+                ctx = gsap.context(() => {
+                    const userCleanup = callback(gsap);
+                    if (typeof userCleanup === "function") {
+                        cleanupRef.current = userCleanup;
+                    }
+                });
+            })
+            .catch((error) => {
+                // Keep the UI usable if a dev-server chunk goes stale during HMR.
+                console.warn("GSAP animation skipped:", error);
             });
-        });
 
         return () => {
             ctx?.revert();

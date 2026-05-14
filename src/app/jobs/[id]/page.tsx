@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import Navbar from "@/components/layout/Navbar";
@@ -13,8 +14,8 @@ import { ESCROW_ABI } from "@/lib/contracts";
 import { ESCROW_CONTRACT_ADDRESS } from "@/lib/wagmi";
 import { supabase } from "@/lib/supabase";
 import { formatUSDC, formatAddress, getIPFSUrl } from "@/lib/utils";
+import { JOB_STATUS, DISPUTE_STATUS, canChatForJobStatus, getJobStatusLabel } from "@/lib/status";
 import { Loader2, ExternalLink, Upload, CheckCircle2, AlertTriangle, XCircle, MessageCircle, UserCheck } from "lucide-react";
-import JobXmtpChat from "@/components/chat/JobXmtpChat";
 import ProjectSubmissionForm from "@/components/jobs/ProjectSubmissionForm";
 import { useGSAP } from "@/hooks/useGSAP";
 import gsap from "gsap";
@@ -28,6 +29,15 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+
+const JobXmtpChat = dynamic(() => import("@/components/chat/JobXmtpChat"), {
+    ssr: false,
+    loading: () => (
+        <div className="h-full flex items-center justify-center text-sm text-white/50">
+            Loading secure chat...
+        </div>
+    ),
+});
 
 interface Job {
     id: string;
@@ -110,7 +120,7 @@ export default function JobDetailsPage() {
             if (txReceipt.status === "success") {
                 switch (pendingAction) {
                     case "cancel":
-                        await supabase.from("jobs").update({ status: "CANCELLED" }).eq("id", job.id);
+                        await supabase.from("jobs").update({ status: JOB_STATUS.CANCELLED }).eq("id", job.id);
                         setShowCancelDialog(false);
                         setIsCancelling(false);
                         alert("✅ Job cancelled successfully! Refund sent to your wallet.");
@@ -119,8 +129,8 @@ export default function JobDetailsPage() {
                     case "accept":
                         {
                             const { error } = await supabase
-                                .from("jobs").update({ freelancer: address, status: "WAITING_CLIENT_APPROVAL" }).eq("id", job.id);
-                            setJob((prev) => prev ? { ...prev, freelancer: address || prev.freelancer, status: "WAITING_CLIENT_APPROVAL" } : prev);
+                                .from("jobs").update({ freelancer: address, status: JOB_STATUS.WAITING_CLIENT_APPROVAL }).eq("id", job.id);
+                            setJob((prev) => prev ? { ...prev, freelancer: address || prev.freelancer, status: JOB_STATUS.WAITING_CLIENT_APPROVAL } : prev);
                             if (error) {
                                 setJobEventNotice("Accepted on-chain. Waiting for client approval. Database sync is pending.");
                             } else {
@@ -136,17 +146,17 @@ export default function JobDetailsPage() {
                         }
                         break;
                     case "approve":
-                        await supabase.from("jobs").update({ status: "APPROVED" }).eq("id", job.id);
+                        await supabase.from("jobs").update({ status: JOB_STATUS.APPROVED }).eq("id", job.id);
                         alert("✅ Job approved! Funds released to freelancer.");
                         fetchJob();
                         break;
                     case "submit":
-                        await supabase.from("jobs").update({ status: "SUBMITTED" }).eq("id", job.id);
+                        await supabase.from("jobs").update({ status: JOB_STATUS.SUBMITTED }).eq("id", job.id);
                         alert("✅ Deliverable submitted successfully!");
                         fetchJob();
                         break;
                     case "dispute":
-                        await supabase.from("jobs").update({ status: "DISPUTED" }).eq("id", job.id);
+                        await supabase.from("jobs").update({ status: JOB_STATUS.DISPUTED }).eq("id", job.id);
                         alert("✅ Dispute raised successfully!");
                         router.push("/disputes");
                         break;
@@ -206,9 +216,9 @@ export default function JobDetailsPage() {
 
     const handleApproveFreelancerAcceptance = async () => {
         if (!job || !job.freelancer || !isClient) return;
-        const { error } = await supabase.from("jobs").update({ status: "ACCEPTED" }).eq("id", job.id);
+        const { error } = await supabase.from("jobs").update({ status: JOB_STATUS.ACCEPTED }).eq("id", job.id);
         if (error) { alert(`❌ Failed to approve freelancer: ${error.message}`); return; }
-        setJob((prev) => (prev ? { ...prev, status: "ACCEPTED" } : prev));
+        setJob((prev) => (prev ? { ...prev, status: JOB_STATUS.ACCEPTED } : prev));
         setJobEventNotice("Freelancer approved. Chat is now enabled.");
         await createNotification({
             wallet: job.freelancer, type: "job_accepted",
@@ -245,7 +255,8 @@ export default function JobDetailsPage() {
                 contract_job_id: job.contract_job_id,
                 raised_by: address || "",
                 reason: disputeReason,
-                status: "DISPUTED", // Skip RAISED directly into DISPUTED state since no contract transaction is needed
+                // Skip the on-chain RAISED state since no contract transaction is needed.
+                status: DISPUTE_STATUS.OPEN,
                 outcome: "PENDING",
                 dispute_pdf_ipfs: ipfsHash,
             }).select();
@@ -332,20 +343,17 @@ export default function JobDetailsPage() {
 
     const isClient = address?.toLowerCase() === job.client.toLowerCase();
     const isFreelancer = address?.toLowerCase() === job.freelancer?.toLowerCase();
-    const canAccept = job.status === "OPEN" && !isClient && isConnected;
-    const canApproveFreelancer = job.status === "WAITING_CLIENT_APPROVAL" && isClient;
-    const isFreelancerWaitingApproval = job.status === "WAITING_CLIENT_APPROVAL" && isFreelancer;
-    const canSubmit = job.status === "ACCEPTED" && isFreelancer;
-    const canApprove = job.status === "SUBMITTED" && isClient;
-    const canDispute = ["ACCEPTED", "SUBMITTED"].includes(job.status) && (isClient || isFreelancer);
-    const canCancel = job.status === "OPEN" && isClient && isConnected;
+    const canAccept = job.status === JOB_STATUS.OPEN && !isClient && isConnected;
+    const canApproveFreelancer = job.status === JOB_STATUS.WAITING_CLIENT_APPROVAL && isClient;
+    const isFreelancerWaitingApproval = job.status === JOB_STATUS.WAITING_CLIENT_APPROVAL && isFreelancer;
+    const canSubmit = job.status === JOB_STATUS.ACCEPTED && isFreelancer;
+    const canApprove = job.status === JOB_STATUS.SUBMITTED && isClient;
+    const canDispute = [JOB_STATUS.ACCEPTED, JOB_STATUS.SUBMITTED].includes(job.status as typeof JOB_STATUS.ACCEPTED | typeof JOB_STATUS.SUBMITTED) && (isClient || isFreelancer);
+    const canCancel = job.status === JOB_STATUS.OPEN && isClient && isConnected;
     const canAccessChat =
-        Boolean(job.freelancer) && (isClient || isFreelancer) &&
-        ["ACCEPTED", "SUBMITTED", "DISPUTED", "APPROVED", "RESOLVED"].includes(job.status);
-    const isChatPhase = ["ACCEPTED", "SUBMITTED", "DISPUTED", "APPROVED", "RESOLVED"].includes(job.status);
+        Boolean(job.freelancer) && (isClient || isFreelancer) && canChatForJobStatus(job.status);
     const isAwaitingAcceptConfirmation = pendingAction === "accept" && Boolean(pendingTxHash) && !txReceipt;
-    const chatWithAddress = isClient ? job.freelancer : job.client;
-    const statusLabel = job.status === "WAITING_CLIENT_APPROVAL" ? "PENDING APPROVAL" : job.status;
+    const statusLabel = getJobStatusLabel(job.status);
 
     return (
         <div className="min-h-screen bg-black text-white relative z-10">
@@ -375,9 +383,9 @@ export default function JobDetailsPage() {
                                 </div>
                                 <div className="shrink-0">
                                     <Badge variant="outline" className={`px-3 py-1.5 text-[10px] font-bold tracking-widest uppercase border ${
-                                        job.status === "OPEN" ? "bg-[#1DBF73]/10 text-[#1DBF73] border-[#1DBF73]/30" :
-                                        job.status === "APPROVED" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" :
-                                        job.status === "DISPUTED" ? "bg-red-500/10 text-red-400 border-red-500/30" : "bg-indigo-500/10 text-indigo-400 border-indigo-500/30"
+                                        job.status === JOB_STATUS.OPEN ? "bg-[#1DBF73]/10 text-[#1DBF73] border-[#1DBF73]/30" :
+                                        job.status === JOB_STATUS.APPROVED ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" :
+                                        job.status === JOB_STATUS.DISPUTED ? "bg-red-500/10 text-red-400 border-red-500/30" : "bg-indigo-500/10 text-indigo-400 border-indigo-500/30"
                                     }`}>
                                         {statusLabel}
                                     </Badge>

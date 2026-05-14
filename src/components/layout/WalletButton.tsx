@@ -1,8 +1,8 @@
 "use client";
 
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { Wallet, ChevronDown, AlertTriangle, Zap } from "lucide-react";
+import { motion, useMotionValue, useSpring } from "framer-motion";
+import { Wallet, ChevronDown, AlertTriangle } from "lucide-react";
 import { useState, useRef } from "react";
 
 // ─── 3D button primitives ──────────────────────────────────────────────────────
@@ -74,7 +74,6 @@ function Btn3D({ onClick, children, variant = "connect", compact = false }: Btn3
     }[variant];
 
     const depth = pressed ? 1 : hovered ? V.ledgePx + 1 : V.ledgePx;
-    const shadowY = pressed ? 1 : hovered ? V.ledgePx + 2 : V.ledgePx;
 
     return (
         <motion.button

@@ -4,7 +4,6 @@ import { useState, useRef } from "react";
 import {
     Upload,
     FileText,
-    Link2,
     Globe,
     Github,
     StickyNote,

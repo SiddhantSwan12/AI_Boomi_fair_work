@@ -142,6 +142,35 @@ export type Database = {
                 Insert: Omit<Database["public"]["Tables"]["meet_recordings"]["Row"], "id" | "created_at">;
                 Update: Partial<Database["public"]["Tables"]["meet_recordings"]["Insert"]>;
             };
+            juror_pending: {
+                Row: {
+                    id:          string;
+                    wallet:      string;
+                    root_hex:    string;
+                    leaf_hashes: string[];
+                    expires_at:  string;
+                    created_at:  string;
+                };
+                Insert: Omit<Database["public"]["Tables"]["juror_pending"]["Row"], "id" | "created_at">;
+                Update: Partial<Database["public"]["Tables"]["juror_pending"]["Insert"]>;
+            };
+            juror_profiles: {
+                Row: {
+                    id:               string;
+                    wallet:           string;
+                    display_name:     string;
+                    expertise:        string[] | null;
+                    bio:              string | null;
+                    experience_level: string | null;
+                    credential_root:  string;
+                    leaf_hashes:      string[];
+                    anchor_tx:        string;
+                    anchored_at:      string | null;
+                    created_at:       string;
+                };
+                Insert: Omit<Database["public"]["Tables"]["juror_profiles"]["Row"], "id" | "created_at">;
+                Update: Partial<Database["public"]["Tables"]["juror_profiles"]["Insert"]>;
+            };
             legal_reports: {
                 Row: {
                     id: string;

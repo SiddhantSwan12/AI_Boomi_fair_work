@@ -6,6 +6,7 @@ import Navbar from "@/components/layout/Navbar";
 import JobCard from "@/components/jobs/JobCard";
 import JitsiMeetModal from "@/components/meet/JitsiMeetModal";
 import { supabase } from "@/lib/supabase";
+import { JOB_STATUS, isJobBrowseable } from "@/lib/status";
 import {
     Plus, Search, Briefcase, ChevronDown,
     Code, Wallet, Shield, Cpu, Palette, FileCode,
@@ -167,12 +168,11 @@ export default function JobsPage() {
     const fetchJobs = async () => {
         setIsLoading(true);
         let query = supabase.from("jobs").select("*").order("created_at", { ascending: false });
-        if (filter === "open") query = query.eq("status", "OPEN");
-        else if (filter === "active") query = query.in("status", ["WAITING_CLIENT_APPROVAL", "ACCEPTED", "SUBMITTED"]);
-        else query = query.not("status", "in", '("CANCELLED","RESOLVED")');
+        if (filter === "open") query = query.eq("status", JOB_STATUS.OPEN);
+        else if (filter === "active") query = query.in("status", [JOB_STATUS.WAITING_CLIENT_APPROVAL, JOB_STATUS.ACCEPTED, JOB_STATUS.SUBMITTED]);
         const { data, error } = await query;
         if (error) console.error("Error fetching jobs:", error);
-        else setJobs(data || []);
+        else setJobs((data || []).filter((job) => filter !== "all" || isJobBrowseable(job.status)));
         setIsLoading(false);
     };
 
@@ -193,12 +193,11 @@ export default function JobsPage() {
         });
 
     return (
-        <div className="min-h-screen relative z-10 text-white backdrop-blur-[2px]">
-            {/* The global 3D canvas is behind this, so keep backgrounds translucent */}
+        <div className="fw-product-shell relative z-10">
             <Navbar />
 
             {/* ── Category tabs ── */}
-            <div className="border-b border-white/5 bg-black/40 backdrop-blur-xl">
+            <div className="border-b border-[#DFE7E2] bg-white/80 backdrop-blur-xl">
                 <div className="max-w-[1600px] mx-auto px-6 sm:px-10">
                     <div className="flex gap-0 overflow-x-auto scrollbar-hide">
                         {categories.map((cat, i) => (
@@ -208,13 +207,13 @@ export default function JobsPage() {
                                 className="shrink-0 text-[13px] whitespace-nowrap px-4 py-4 transition-all duration-150 relative"
                                 style={{
                                     fontWeight: activeCategory === i ? 700 : 500,
-                                    color: activeCategory === i ? "white" : "rgba(255,255,255,0.5)",
+                                    color: activeCategory === i ? "#15945A" : "#64717D",
                                     borderBottom: activeCategory === i ? "2px solid #1DBF73" : "2px solid transparent",
                                 }}
                             >
                                 {cat}
                                 {activeCategory === i && (
-                                     <span className="absolute bottom-0 left-0 w-full h-[15px] bg-[#1DBF73] blur-[10px] opacity-30 pointer-events-none" />
+                                     <span className="absolute bottom-0 left-0 w-full h-px bg-[#1DBF73] pointer-events-none" />
                                 )}
                             </button>
                         ))}
@@ -223,7 +222,7 @@ export default function JobsPage() {
             </div>
 
             {/* ── Page Header ── */}
-            <div className="border-b border-white/5 bg-gradient-to-b from-black/60 to-transparent backdrop-blur-md">
+            <div className="fw-page-header">
                 <div className="max-w-[1600px] mx-auto px-6 sm:px-10 pt-16 pb-12">
 
                     {/* Title row */}
@@ -231,31 +230,31 @@ export default function JobsPage() {
                         <div>
                             <div className="flex items-center gap-2 mb-4">
                                 <span className="w-1.5 h-1.5 rounded-full bg-[#1DBF73] inline-block shadow-[0_0_8px_#1DBF73]" />
-                                <span className="text-[12px] font-bold tracking-[0.2em] uppercase text-white/50">
+                                <span className="text-[12px] font-bold tracking-[0.2em] uppercase text-[#64717D]">
                                     Live on Polygon
                                 </span>
                             </div>
                             <h1
-                                className="font-extrabold mb-3 text-transparent bg-clip-text bg-gradient-to-br from-white to-white/60"
-                                style={{ fontSize: "clamp(2rem,4vw,3.5rem)", letterSpacing: "-0.03em", lineHeight: 1.1 }}
+                                className="font-extrabold mb-3 text-[#101820]"
+                                style={{ fontSize: "clamp(2rem,4vw,3.5rem)", letterSpacing: 0, lineHeight: 1.1 }}
                             >
                                 Browse Web3 Jobs
                             </h1>
-                            <p className="text-[16px] text-white/50 font-light max-w-xl leading-relaxed">
+                            <p className="text-[16px] text-[#64717D] max-w-xl leading-relaxed">
                                 Deep liquidity and fast milestones. Funds are locked in smart contract escrow until you approve delivery.
                             </p>
                         </div>
                         <div className="flex items-center gap-3 shrink-0 mt-2">
                             <button
                                 onClick={startTestMeet}
-                                className="flex items-center gap-2 px-5 py-3 text-[14px] font-bold transition-all duration-300 rounded-full bg-white/5 text-white/80 border border-white/10 hover:bg-white/10 hover:text-white"
+                                className="flex items-center gap-2 px-5 py-3 text-[14px] font-bold transition-all duration-200 rounded-lg bg-white text-[#24313D] border border-[#DFE7E2] hover:border-[#1DBF73]/40 hover:text-[#15945A]"
                             >
                                 <Video className="w-4 h-4" /> Test Meet
                             </button>
                             <Link
                                 href="/jobs/create"
-                                className="flex items-center gap-2 px-5 py-3 text-[14px] font-bold text-white rounded-full transition-all duration-300 hover:scale-105"
-                                style={{ background: "#1DBF73", boxShadow: "0 4px 20px rgba(29, 191, 115, 0.4)" }}
+                                className="flex items-center gap-2 px-5 py-3 text-[14px] font-bold text-white rounded-lg transition-all duration-200"
+                                style={{ background: "#1DBF73" }}
                             >
                                 <Plus className="w-4 h-4" strokeWidth={3} /> Post a Job
                             </Link>
@@ -271,9 +270,9 @@ export default function JobsPage() {
                             { value: "24h",   label: "avg resolution" },
                         ].map((s, i) => (
                             <div key={i} className="flex items-baseline gap-2">
-                                {i > 0 && <div className="w-px h-5 bg-white/10 mr-6" />}
-                                <span className="font-black text-[22px]" style={{ color: "white", letterSpacing: "-0.02em" }}>{s.value}</span>
-                                <span className="text-[11px] uppercase tracking-widest font-bold" style={{ color: "rgba(255,255,255,0.4)" }}>{s.label}</span>
+                                {i > 0 && <div className="w-px h-5 bg-[#DFE7E2] mr-6" />}
+                                <span className="font-black text-[22px]" style={{ color: "#101820", letterSpacing: 0 }}>{s.value}</span>
+                                <span className="text-[11px] uppercase tracking-widest font-bold" style={{ color: "#64717D" }}>{s.label}</span>
                             </div>
                         ))}
                     </div>
@@ -285,17 +284,17 @@ export default function JobsPage() {
                             return (
                                 <button
                                     key={pill.name}
-                                    className="group flex items-center gap-2 shrink-0 px-4 py-2 text-[13px] font-bold rounded-full transition-all duration-300 border backdrop-blur-xl"
-                                    style={{ background: "rgba(255,255,255,0.03)", color: "rgba(255,255,255,0.6)", borderColor: "rgba(255,255,255,0.05)" }}
+                                    className="group flex items-center gap-2 shrink-0 px-4 py-2 text-[13px] font-bold rounded-lg transition-all duration-200 border bg-white"
+                                    style={{ color: "#64717D", borderColor: "#DFE7E2" }}
                                     onMouseEnter={(e) => { 
                                         (e.currentTarget as HTMLElement).style.background = styles.bg; 
                                         (e.currentTarget as HTMLElement).style.color = styles.color; 
                                         (e.currentTarget as HTMLElement).style.borderColor = styles.border; 
                                     }}
                                     onMouseLeave={(e) => { 
-                                        (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)"; 
-                                        (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.6)";
-                                        (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.05)";
+                                        (e.currentTarget as HTMLElement).style.background = "#ffffff";
+                                        (e.currentTarget as HTMLElement).style.color = "#64717D";
+                                        (e.currentTarget as HTMLElement).style.borderColor = "#DFE7E2";
                                     }}
                                 >
                                     <pill.icon className="w-4 h-4 transition-colors" />
@@ -317,19 +316,19 @@ export default function JobsPage() {
 
                             {/* Search */}
                             <div className="relative mb-10">
-                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "rgba(255,255,255,0.4)" }} />
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "#8B959F" }} />
                                 <input
                                     type="text"
                                     placeholder="Filter jobs…"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     className="w-full pl-11 pr-4 py-3 text-[14px] outline-none rounded-xl transition-all"
-                                    style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", color: "white" }}
-                                    onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.3)")}
-                                    onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)")}
+                                    style={{ background: "#ffffff", border: "1px solid #DFE7E2", color: "#101820" }}
+                                    onFocus={(e) => (e.currentTarget.style.borderColor = "#1DBF73")}
+                                    onBlur={(e) => (e.currentTarget.style.borderColor = "#DFE7E2")}
                                 />
                                 {searchQuery && (
-                                    <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: "rgba(255,255,255,0.4)" }}>
+                                    <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: "#8B959F" }}>
                                         <X className="w-4 h-4" />
                                     </button>
                                 )}
@@ -337,7 +336,7 @@ export default function JobsPage() {
 
                             {/* Status */}
                             <div className="mb-10">
-                                <p className="text-[11px] font-bold uppercase tracking-[0.2em] mb-4" style={{ color: "rgba(255,255,255,0.4)" }}>Status</p>
+                                <p className="text-[11px] font-bold uppercase tracking-[0.2em] mb-4" style={{ color: "#64717D" }}>Status</p>
                                 <div className="space-y-1">
                                     {STATUS_FILTERS.map((opt) => (
                                         <button
@@ -345,11 +344,11 @@ export default function JobsPage() {
                                             onClick={() => setFilter(opt.value as "all" | "open" | "active")}
                                             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[14px] font-bold transition-all duration-300"
                                             style={filter === opt.value
-                                                ? { background: "rgba(255,255,255,0.1)", color: "white" }
-                                                : { color: "rgba(255,255,255,0.5)" }
+                                                ? { background: "#E7F8EF", color: "#15945A" }
+                                                : { color: "#64717D" }
                                             }
-                                            onMouseEnter={(e) => { if (filter !== opt.value) (e.currentTarget as HTMLElement).style.color = "white"; }}
-                                            onMouseLeave={(e) => { if (filter !== opt.value) (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.5)"; }}
+                                            onMouseEnter={(e) => { if (filter !== opt.value) (e.currentTarget as HTMLElement).style.color = "#101820"; }}
+                                            onMouseLeave={(e) => { if (filter !== opt.value) (e.currentTarget as HTMLElement).style.color = "#64717D"; }}
                                         >
                                             {filter === opt.value && <span className="w-1.5 h-1.5 rounded-full bg-[#1DBF73] shrink-0 shadow-[0_0_8px_#1DBF73]" />}
                                             <span className={filter === opt.value ? "" : "ml-4"}>{opt.label}</span>
@@ -360,7 +359,7 @@ export default function JobsPage() {
 
                             {/* Budget */}
                             <div className="mb-10">
-                                <p className="text-[11px] font-bold uppercase tracking-[0.2em] mb-4" style={{ color: "rgba(255,255,255,0.4)" }}>Budget</p>
+                                <p className="text-[11px] font-bold uppercase tracking-[0.2em] mb-4" style={{ color: "#64717D" }}>Budget</p>
                                 <div className="space-y-1">
                                     {BUDGET_RANGES.map((range, i) => (
                                         <button
@@ -368,11 +367,11 @@ export default function JobsPage() {
                                             onClick={() => setBudgetRange(i)}
                                             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[14px] font-bold transition-all duration-300"
                                             style={budgetRange === i
-                                                ? { background: "rgba(255,255,255,0.1)", color: "white" }
-                                                : { color: "rgba(255,255,255,0.5)" }
+                                                ? { background: "#E7F8EF", color: "#15945A" }
+                                                : { color: "#64717D" }
                                             }
-                                            onMouseEnter={(e) => { if (budgetRange !== i) (e.currentTarget as HTMLElement).style.color = "white"; }}
-                                            onMouseLeave={(e) => { if (budgetRange !== i) (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.5)"; }}
+                                            onMouseEnter={(e) => { if (budgetRange !== i) (e.currentTarget as HTMLElement).style.color = "#101820"; }}
+                                            onMouseLeave={(e) => { if (budgetRange !== i) (e.currentTarget as HTMLElement).style.color = "#64717D"; }}
                                         >
                                             {budgetRange === i && <span className="w-1.5 h-1.5 rounded-full bg-[#1DBF73] shrink-0 shadow-[0_0_8px_#1DBF73]" />}
                                             <span className={budgetRange === i ? "" : "ml-4"}>{range.label}</span>
@@ -383,7 +382,7 @@ export default function JobsPage() {
 
                             {/* Sort */}
                             <div>
-                                <p className="text-[11px] font-bold uppercase tracking-[0.2em] mb-4" style={{ color: "rgba(255,255,255,0.4)" }}>Sort</p>
+                                <p className="text-[11px] font-bold uppercase tracking-[0.2em] mb-4" style={{ color: "#64717D" }}>Sort</p>
                                 <div className="space-y-1">
                                     {([
                                         { value: "newest",      label: "Newest first" },
@@ -395,11 +394,11 @@ export default function JobsPage() {
                                             onClick={() => setSortBy(opt.value)}
                                             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[14px] font-bold transition-all duration-300"
                                             style={sortBy === opt.value
-                                                ? { background: "rgba(255,255,255,0.1)", color: "white" }
-                                                : { color: "rgba(255,255,255,0.5)" }
+                                                ? { background: "#E7F8EF", color: "#15945A" }
+                                                : { color: "#64717D" }
                                             }
-                                            onMouseEnter={(e) => { if (sortBy !== opt.value) (e.currentTarget as HTMLElement).style.color = "white"; }}
-                                            onMouseLeave={(e) => { if (sortBy !== opt.value) (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.5)"; }}
+                                            onMouseEnter={(e) => { if (sortBy !== opt.value) (e.currentTarget as HTMLElement).style.color = "#101820"; }}
+                                            onMouseLeave={(e) => { if (sortBy !== opt.value) (e.currentTarget as HTMLElement).style.color = "#64717D"; }}
                                         >
                                             {sortBy === opt.value && <span className="w-1.5 h-1.5 rounded-full bg-[#1DBF73] shrink-0 shadow-[0_0_8px_#1DBF73]" />}
                                             <span className={sortBy === opt.value ? "" : "ml-4"}>{opt.label}</span>
@@ -416,18 +415,18 @@ export default function JobsPage() {
                         {/* Mobile toolbar */}
                         <div className="flex lg:hidden items-center gap-3 mb-8">
                             <div className="relative flex-1">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8B959F]" />
                                 <input
                                     type="text"
                                     placeholder="Search jobs…"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-3 text-[14px] outline-none rounded-xl bg-white/5 border border-white/10 text-white"
+                                    className="w-full pl-10 pr-4 py-3 text-[14px] outline-none rounded-lg bg-white border border-[#DFE7E2] text-[#101820]"
                                 />
                             </div>
                             <button
                                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                                className="flex items-center gap-2 px-4 py-3 text-[14px] font-bold rounded-xl bg-white/5 border border-white/10 text-white"
+                                className="flex items-center gap-2 px-4 py-3 text-[14px] font-bold rounded-lg bg-white border border-[#DFE7E2] text-[#24313D]"
                             >
                                 <SlidersHorizontal className="w-4 h-4" /> Filters
                             </button>
@@ -435,13 +434,13 @@ export default function JobsPage() {
                                 <select
                                     value={sortBy}
                                     onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                                    className="pl-4 pr-10 py-3 text-[14px] font-bold appearance-none outline-none rounded-xl cursor-pointer bg-white/5 border border-white/10 text-white"
+                                    className="pl-4 pr-10 py-3 text-[14px] font-bold appearance-none outline-none rounded-lg cursor-pointer bg-white border border-[#DFE7E2] text-[#24313D]"
                                 >
-                                    <option value="newest" className="bg-[#0a0f1e] text-white">Newest</option>
-                                    <option value="budget_high" className="bg-[#0a0f1e] text-white">Budget ↑</option>
-                                    <option value="budget_low" className="bg-[#0a0f1e] text-white">Budget ↓</option>
+                                    <option value="newest">Newest</option>
+                                    <option value="budget_high">Budget ↑</option>
+                                    <option value="budget_low">Budget ↓</option>
                                 </select>
-                                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-white/50" />
+                                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-[#8B959F]" />
                             </div>
                         </div>
 
@@ -452,25 +451,25 @@ export default function JobsPage() {
                                     initial={{ opacity: 0, height: 0 }}
                                     animate={{ opacity: 1, height: "auto" }}
                                     exit={{ opacity: 0, height: 0 }}
-                                    className="lg:hidden mb-8 overflow-hidden rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl"
+                                    className="lg:hidden mb-8 overflow-hidden rounded-lg bg-white border border-[#DFE7E2]"
                                 >
                                     <div className="p-6 grid grid-cols-2 gap-8">
                                         <div>
-                                            <p className="text-[11px] font-bold uppercase tracking-[0.2em] mb-4 text-white/40">Status</p>
+                                            <p className="text-[11px] font-bold uppercase tracking-[0.2em] mb-4 text-[#64717D]">Status</p>
                                             {STATUS_FILTERS.map((opt) => (
                                                 <button key={opt.value} onClick={() => setFilter(opt.value as "all" | "open" | "active")}
                                                     className="w-full text-left px-3 py-2.5 rounded-lg text-[14px] font-bold transition-all mb-1"
-                                                    style={filter === opt.value ? { background: "rgba(255,255,255,0.1)", color: "white" } : { color: "rgba(255,255,255,0.5)" }}>
+                                                    style={filter === opt.value ? { background: "#E7F8EF", color: "#15945A" } : { color: "#64717D" }}>
                                                     {opt.label}
                                                 </button>
                                             ))}
                                         </div>
                                         <div>
-                                            <p className="text-[11px] font-bold uppercase tracking-[0.2em] mb-4 text-white/40">Budget</p>
+                                            <p className="text-[11px] font-bold uppercase tracking-[0.2em] mb-4 text-[#64717D]">Budget</p>
                                             {BUDGET_RANGES.map((range, i) => (
                                                 <button key={range.label} onClick={() => setBudgetRange(i)}
                                                     className="w-full text-left px-3 py-2.5 rounded-lg text-[14px] font-bold transition-all mb-1"
-                                                    style={budgetRange === i ? { background: "rgba(255,255,255,0.1)", color: "white" } : { color: "rgba(255,255,255,0.5)" }}>
+                                                    style={budgetRange === i ? { background: "#E7F8EF", color: "#15945A" } : { color: "#64717D" }}>
                                                     {range.label}
                                                 </button>
                                             ))}
@@ -481,13 +480,13 @@ export default function JobsPage() {
                         </AnimatePresence>
 
                         {/* Results count + divider */}
-                        <div className="flex items-center gap-4 mb-8 pb-4 border-b border-white/10">
-                            <p className="text-[14px] font-light text-white/60">
-                                <span className="font-black text-white">{filteredJobs.length}</span> results
+                        <div className="flex items-center gap-4 mb-8 pb-4 border-b border-[#DFE7E2]">
+                            <p className="text-[14px] text-[#64717D]">
+                                <span className="font-black text-[#101820]">{filteredJobs.length}</span> results
                             </p>
                             {searchQuery && (
-                                <span className="text-[12px] font-bold tracking-widest px-3 py-1 rounded-full bg-white/10 border border-white/20 text-white/80">
-                                    "{searchQuery}" <button onClick={() => setSearchQuery("")} className="ml-2 hover:text-white transition-colors text-white/40 font-black">×</button>
+                                <span className="text-[12px] font-bold tracking-widest px-3 py-1 rounded-lg bg-[#EAF6F7] border border-[#B9E5E9] text-[#0F7C86]">
+                                    {'"'}{searchQuery}{'"'} <button onClick={() => setSearchQuery("")} className="ml-2 hover:text-[#101820] transition-colors text-[#0F7C86] font-black">×</button>
                                 </span>
                             )}
                         </div>
@@ -498,15 +497,15 @@ export default function JobsPage() {
                                 {Array.from({ length: 5 }).map((_, i) => <SkeletonCard key={i} />)}
                             </div>
                         ) : filteredJobs.length === 0 ? (
-                            <div className="text-center py-32 rounded-[2rem] bg-white/5 border border-white/10 backdrop-blur-md">
-                                <Briefcase className="w-12 h-12 mx-auto mb-6 text-white/20" />
-                                <h3 className="font-bold mb-2 text-[20px] text-white tracking-wide">No jobs found</h3>
-                                <p className="text-[15px] mb-8 font-light text-white/50">
+                            <div className="text-center py-32 rounded-lg bg-white border border-[#DFE7E2]">
+                                <Briefcase className="w-12 h-12 mx-auto mb-6 text-[#8B959F]" />
+                                <h3 className="font-bold mb-2 text-[20px] text-[#101820] tracking-normal">No jobs found</h3>
+                                <p className="text-[15px] mb-8 text-[#64717D]">
                                     {searchQuery ? `No results for "${searchQuery}"` : "Be the first to post a job."}
                                 </p>
                                 <Link
                                     href="/jobs/create"
-                                    className="inline-flex items-center gap-2 px-6 py-3 text-[14px] font-bold text-white rounded-full bg-[#1DBF73] bg-opacity-[0.85] hover:bg-opacity-100 transition-all hover:scale-105 shadow-[0_0_20px_rgba(29,191,115,0.3)]"
+                                    className="inline-flex items-center gap-2 px-6 py-3 text-[14px] font-bold text-white rounded-lg bg-[#1DBF73] hover:bg-[#15945A] transition-all"
                                 >
                                     Post a Job
                                 </Link>

@@ -195,6 +195,15 @@ export const ESCROW_ABI = [
         anonymous: false,
         inputs: [
             { indexed: true, name: "disputeId", type: "uint256" },
+            { indexed: true, name: "requestId", type: "uint256" },
+        ],
+        name: "JurorSelectionRequested",
+        type: "event",
+    },
+    {
+        anonymous: false,
+        inputs: [
+            { indexed: true, name: "disputeId", type: "uint256" },
             { indexed: false, name: "jurors", type: "address[]" },
         ],
         name: "JurorsSelected",

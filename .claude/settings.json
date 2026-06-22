@@ -4,7 +4,8 @@
       "Bash(gh api *)",
       "Bash(grep -i \"\\\\.sol$\")",
       "Bash(forge build *)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(forge install *)"
     ]
   }
 }

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { parseEventLogs } from "viem";
 import Navbar from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -69,6 +70,7 @@ export default function JobDetailsPage() {
     const [showCancelDialog, setShowCancelDialog] = useState(false);
     const [isCancelling, setIsCancelling] = useState(false);
     const [isSubmittingDispute, setIsSubmittingDispute] = useState(false);
+    const [pendingDisputeIpfsHash, setPendingDisputeIpfsHash] = useState("");
     const [pendingTxHash, setPendingTxHash] = useState<`0x${string}` | undefined>();
     const [pendingAction, setPendingAction] = useState<string | null>(null);
     const [jobEventNotice, setJobEventNotice] = useState<string | null>(null);
@@ -155,11 +157,60 @@ export default function JobDetailsPage() {
                         alert("✅ Deliverable submitted successfully!");
                         fetchJob();
                         break;
-                    case "dispute":
+                    case "dispute": {
+                        // Parse the DisputeRaised event to get the real on-chain disputeId
+                        const disputeLogs = parseEventLogs({
+                            abi: ESCROW_ABI,
+                            eventName: "DisputeRaised",
+                            logs: txReceipt.logs,
+                        });
+                        const contractDisputeId = disputeLogs[0]?.args?.disputeId ?? BigInt(0);
+
+                        // Now create the Supabase record with the real on-chain ID
+                        const { data: newDisputes, error: dbError } = await supabase
+                            .from("disputes")
+                            .insert({
+                                contract_dispute_id: Number(contractDisputeId),
+                                job_id: job.id,
+                                contract_job_id: job.contract_job_id,
+                                raised_by: address || "",
+                                reason: disputeReason,
+                                status: DISPUTE_STATUS.OPEN,
+                                outcome: "PENDING",
+                                dispute_pdf_ipfs: pendingDisputeIpfsHash,
+                            })
+                            .select();
+
+                        if (dbError) {
+                            alert(`❌ Dispute confirmed on-chain but database sync failed: ${dbError.message}`);
+                            break;
+                        }
+
                         await supabase.from("jobs").update({ status: JOB_STATUS.DISPUTED }).eq("id", job.id);
-                        alert("✅ Dispute raised successfully!");
-                        router.push("/disputes");
+                        setPendingDisputeIpfsHash("");
+
+                        const createdDispute = newDisputes?.[0];
+                        if (createdDispute) {
+                            // Auto-trigger AI analysis
+                            fetch("/api/ai/analyze-dispute", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ disputeId: createdDispute.id }),
+                            }).catch(console.error);
+                            // Assign jurors (uses on-chain VRF result if ready, else simulation)
+                            fetch("/api/dispute/assign-jurors", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                    disputeId: createdDispute.id,
+                                    contractDisputeId: Number(contractDisputeId),
+                                }),
+                            }).catch(console.error);
+                            alert("✅ Dispute raised on-chain! Jurors are being selected and AI is reviewing the case.");
+                            router.push(`/disputes/${createdDispute.id}`);
+                        }
                         break;
+                    }
                 }
             } else {
                 alert(`❌ Transaction failed on-chain! The ${pendingAction} was NOT processed.`);
@@ -232,9 +283,9 @@ export default function JobDetailsPage() {
     const handleRaiseDispute = async () => {
         if (!disputeReason || !job) return;
         setIsSubmittingDispute(true);
-        setPendingAction("dispute");
 
         try {
+            // Upload evidence to IPFS first, then anchor the dispute on-chain
             let ipfsHash = "";
             if (evidenceFile) {
                 const formData = new FormData();
@@ -246,43 +297,38 @@ export default function JobDetailsPage() {
                 }
             }
 
-            // Directly insert into the database (bypassing the strict Smart Contract constraints)
-            // Use a large negative unique value based on timestamp to avoid conflicts with real contract IDs
-            const uniqueOffChainId = -(Date.now() % 2147483647);
-            const { data: newDisputes, error: dbError } = await supabase.from("disputes").insert({
-                contract_dispute_id: uniqueOffChainId,
-                job_id: job.id,
-                contract_job_id: job.contract_job_id,
-                raised_by: address || "",
-                reason: disputeReason,
-                // Skip the on-chain RAISED state since no contract transaction is needed.
-                status: DISPUTE_STATUS.OPEN,
-                outcome: "PENDING",
-                dispute_pdf_ipfs: ipfsHash,
-            }).select();
-
-            if (dbError) throw dbError;
-            const createdDispute = newDisputes?.[0];
-
-            if (createdDispute) {
-                // Backgroundly trigger AI Dispute Arbitration
-                fetch("/api/ai/analyze-dispute", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ disputeId: createdDispute.id })
-                }).catch(console.error);
-
-                alert("Dispute raised successfully! Our AI is reviewing the case now.");
-                router.push(`/disputes/${createdDispute.id}`);
+            if (!ipfsHash) {
+                alert("Evidence file is required to raise a dispute.");
+                setIsSubmittingDispute(false);
+                return;
             }
 
+            // Store for use in txReceipt handler
+            setPendingDisputeIpfsHash(ipfsHash);
+
+            writeContract({
+                address: ESCROW_CONTRACT_ADDRESS,
+                abi: ESCROW_ABI,
+                functionName: "raiseDispute",
+                args: [BigInt(job.contract_job_id), ipfsHash],
+            }, {
+                onSuccess: (txHash) => {
+                    setIsSubmittingDispute(false);
+                    setShowDisputeForm(false);
+                    setPendingTxHash(txHash);
+                    setPendingAction("dispute");
+                    setJobEventNotice("Dispute transaction sent. Waiting for on-chain confirmation...");
+                },
+                onError: (error: Error) => {
+                    setIsSubmittingDispute(false);
+                    setPendingDisputeIpfsHash("");
+                    alert(`❌ Failed to raise dispute: ${error.message}`);
+                },
+            });
         } catch (error) {
             console.error("Error raising dispute:", error);
             alert("Failed to raise dispute");
-        } finally {
             setIsSubmittingDispute(false);
-            setPendingAction(null);
-            setShowDisputeForm(false);
         }
     };
 

@@ -95,6 +95,15 @@ export default function DisputeDetailsPage() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [params.id]);
 
+    // Auto-trigger AI analysis when dispute loads with no existing analysis
+    useEffect(() => {
+        if (!dispute || !job || aiAnalysis || isAnalyzing) return;
+        if (dispute.status === "OPEN" || dispute.status === "AI_ANALYZED") {
+            if (!aiAnalysis) handleRunAIAnalysis();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [dispute?.id, job?.id]);
+
     const fetchDisputeData = async () => {
         setIsLoading(true);
         try {
@@ -293,6 +302,35 @@ export default function DisputeDetailsPage() {
                                     {getDisputeStatusLabel(dispute.status)}
                                 </Badge>
                             </div>
+
+                            {/* ─── Resolution Banner ─── */}
+                            {normalizedDisputeStatus === DISPUTE_STATUS.RESOLVED && (
+                                <div className={`rounded-2xl border px-6 py-5 flex items-center gap-4 ${
+                                    dispute.outcome === "CLIENT_WINS"
+                                        ? "bg-blue-50 border-blue-200"
+                                        : "bg-purple-50 border-purple-200"
+                                }`}>
+                                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                                        dispute.outcome === "CLIENT_WINS" ? "bg-blue-100" : "bg-purple-100"
+                                    }`}>
+                                        <CheckCircle2 className={`w-6 h-6 ${dispute.outcome === "CLIENT_WINS" ? "text-blue-600" : "text-purple-600"}`} />
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className={`text-base font-bold ${dispute.outcome === "CLIENT_WINS" ? "text-blue-800" : "text-purple-800"}`}>
+                                            Dispute Resolved — {dispute.outcome === "CLIENT_WINS" ? "Client" : "Freelancer"} Won
+                                        </p>
+                                        <p className={`text-sm mt-0.5 ${dispute.outcome === "CLIENT_WINS" ? "text-blue-600" : "text-purple-600"}`}>
+                                            Jury voted {dispute.outcome === "CLIENT_WINS" ? `in favour of ${formatAddress(job.client)}` : `in favour of ${formatAddress(job.freelancer)}`}.
+                                            Escrow funds have been released.
+                                        </p>
+                                    </div>
+                                    {dispute.resolved_at && (
+                                        <p className="text-xs text-text-muted flex-shrink-0">
+                                            {new Date(dispute.resolved_at).toLocaleDateString()}
+                                        </p>
+                                    )}
+                                </div>
+                            )}
 
                             {/* ─── PDF Viewer + Agree/Disagree ─── */}
                             <div className="rounded-2xl border border-surface-border bg-surface-elevated/60 overflow-hidden">
@@ -515,13 +553,15 @@ export default function DisputeDetailsPage() {
                             className="w-full lg:w-96 space-y-6"
                         >
                             <JuryVotingPanel
-                                disputeId={BigInt(dispute.contract_dispute_id)}
+                                disputeId={BigInt(dispute.contract_dispute_id ?? 0)}
+                                supabaseDisputeId={dispute.id}
                                 jurors={dispute.jurors?.map(j => j.juror_address) || []}
                                 votes={dispute.votes?.map(v => ({
                                     juror: v.juror, decision: v.decision, votedAt: new Date(v.voted_at).getTime() / 1000,
                                 })) || []}
                                 clientAddress={job.client}
                                 freelancerAddress={job.freelancer}
+                                onResolved={fetchDisputeData}
                             />
 
                             <div className="rounded-2xl border border-surface-border bg-surface-elevated/60 p-6">

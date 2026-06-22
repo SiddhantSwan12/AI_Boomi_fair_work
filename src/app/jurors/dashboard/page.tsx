@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAccount } from "wagmi";
 import { motion } from "framer-motion";
@@ -75,7 +74,6 @@ function DashboardSkeleton() {
 
 export default function JurorDashboard() {
     const { address, isConnected } = useAccount();
-    const router = useRouter();
 
     const [profile, setProfile]       = useState<JurorProfile | null>(null);
     const [disputes, setDisputes]     = useState<AssignedDispute[]>([]);
@@ -307,7 +305,7 @@ export default function JurorDashboard() {
                     <div className="fw-panel p-14 text-center">
                         <Scale className="w-10 h-10 mx-auto mb-4 text-[#DFE7E2]" />
                         <p className="text-[#64717D] font-medium">No disputes assigned yet.</p>
-                        <p className="text-sm text-[#A0ADB4] mt-1">You'll be notified here when selected for a dispute.</p>
+                        <p className="text-sm text-[#A0ADB4] mt-1">You&apos;ll be notified here when selected for a dispute.</p>
                     </div>
                 )}
 

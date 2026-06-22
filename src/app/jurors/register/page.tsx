@@ -6,7 +6,7 @@ import { useAccount, useSignTypedData } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { motion, AnimatePresence } from "framer-motion";
 import { hexToSignature, type Hex } from "viem";
-import { hashDocument, buildTreeFromHashes } from "@/lib/merkle";
+import { hashDocument } from "@/lib/merkle";
 import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/layout/Navbar";
 import {

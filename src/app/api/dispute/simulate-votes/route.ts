@@ -19,12 +19,14 @@ export async function POST(req: NextRequest) {
         }
 
         // Fetch assigned jurors — auto-assign demo jurors if none exist yet
-        let { data: jurors, error: jurorError } = await supabase
+        const { error: jurorError, data: initialJurors } = await supabase
             .from("jurors")
             .select("juror_address")
             .eq("dispute_id", disputeId);
 
         if (jurorError) throw jurorError;
+
+        let jurors = initialJurors;
 
         if (!jurors || jurors.length < 3) {
             // No jurors yet — insert demo addresses and advance status to VOTING

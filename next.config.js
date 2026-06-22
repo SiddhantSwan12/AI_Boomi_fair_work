@@ -5,7 +5,7 @@ const nextConfig = {
     webpack: (config, { isServer }) => {
         config.externals.push("pino-pretty", "lokijs", "encoding");
 
-        // Enable WASM support for @react-three/rapier
+        // Enable WASM support for @xmtp/wasm-bindings
         // layers: true is required in Next.js 14 for WASM to be properly chunked client-side
         config.experiments = {
             ...config.experiments,
